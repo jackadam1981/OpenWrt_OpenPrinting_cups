@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: Apache-2.0
+
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=cups
+PKG_VERSION:=2.4.14
+PKG_RELEASE:=1
+
+# TODO: 更新为对应版本 tarball 的真实 SHA256
+PKG_HASH:=660288020dd6f79caf799811c4c1a3207a48689899ac2093959d70a3bdcb7699
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-source.tar.gz
+PKG_SOURCE_URL:=https://github.com/OpenPrinting/cups/releases/download/v$(PKG_VERSION)/
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+
+PKG_LICENSE:=Apache-2.0
+PKG_LICENSE_FILES:=LICENSE.txt
+PKG_MAINTAINER:=OpenPrinting Community <printing-discuss@lists.linuxfoundation.org>
+
+PKG_BUILD_PARALLEL:=1
+PKG_INSTALL:=1
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/cups
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=Printing
+  TITLE:=Common Unix Printing System (CUPS)
+  URL:=https://openprinting.org/cups/
+  DEPENDS:=+libpthread +zlib +libjpeg +libpng +libopenssl +libusb-1.0 +libstdcpp
+endef
+
+define Package/cups/description
+ CUPS (Common Unix Printing System) 是 OpenPrinting 主导的跨平台打印服务框架。
+ 它提供 IPP/IPP Everywhere 兼容的打印服务器、调度与驱动管理能力。
+endef
+
+CONFIGURE_ARGS += \
+    --disable-dbus \
+    --disable-launchd \
+    --disable-systemd \
+    --with-cups-user=lp \
+    --with-cups-group=lp \
+    --with-system-groups=lpadmin \
+    --without-java \
+    --without-rcdir \
+    --with-docdir=/usr/share/cups/doc
+
+CONFIGURE_VARS += \
+    ac_cv_func_gnutls_handle_handshake_timeout=no \
+    ac_cv_cups_use_networking=yes
+
+TARGET_CFLAGS += -fPIC
+TARGET_LDFLAGS += -Wl,--as-needed
+
+define Build/Prepare
+    $(call Build/Prepare/Default)
+endef
+
+define Package/cups/install
+    $(INSTALL_DIR) $(1)/usr/sbin
+    $(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/cupsd $(1)/usr/sbin/
+
+    $(INSTALL_DIR) $(1)/usr/bin
+    for bin in cancel cupsaccept cupsdisable cupsenable cupsfilter \
+        cupsreject lp lpadmin lpinfo lpmove lpoptions lpr lprm; do \
+        [ -f $(PKG_INSTALL_DIR)/usr/bin/$$bin ] && \
+            $(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/$$bin $(1)/usr/bin/; \
+    done
+
+    $(INSTALL_DIR) $(1)/etc/cups
+    $(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
+
+    $(INSTALL_DIR) $(1)/usr/lib/cups
+    $(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/* $(1)/usr/lib/cups/
+
+    $(INSTALL_DIR) $(1)/usr/share/cups
+    $(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
+
+    for d in cache certs logs spool; do \
+        $(INSTALL_DIR) $(1)/var/run/cups/$$d; \
+    done
+
+    $(INSTALL_DIR) $(1)/etc/init.d
+    $(INSTALL_BIN) ./files/cupsd.init $(1)/etc/init.d/cupsd
+endef
+
+define Package/cups/conffiles
+/etc/cups/cups-files.conf
+/etc/cups/cupsd.conf
+endef
+
+$(eval $(call BuildPackage,cups))
+
