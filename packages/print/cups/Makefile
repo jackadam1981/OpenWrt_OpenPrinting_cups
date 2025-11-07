@@ -55,35 +55,35 @@ TARGET_CFLAGS += -fPIC
 TARGET_LDFLAGS += -Wl,--as-needed
 
 define Build/Prepare
-    $(call Build/Prepare/Default)
+	$(call Build/Prepare/Default)
 endef
 
 define Package/cups/install
-    $(INSTALL_DIR) $(1)/usr/sbin
-    $(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/cupsd $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/cupsd $(1)/usr/sbin/
 
-    $(INSTALL_DIR) $(1)/usr/bin
-    for bin in cancel cupsaccept cupsdisable cupsenable cupsfilter \
-        cupsreject lp lpadmin lpinfo lpmove lpoptions lpr lprm; do \
-        [ -f $(PKG_INSTALL_DIR)/usr/bin/$$bin ] && \
-            $(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/$$bin $(1)/usr/bin/; \
-    done
+	$(INSTALL_DIR) $(1)/usr/bin
+	for bin in cancel cupsaccept cupsdisable cupsenable cupsfilter \
+		cupsreject lp lpadmin lpinfo lpmove lpoptions lpr lprm; do \
+		[ -f $(PKG_INSTALL_DIR)/usr/bin/$$bin ] && \
+			$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/$$bin $(1)/usr/bin/; \
+	done
 
-    $(INSTALL_DIR) $(1)/etc/cups
-    $(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
+	$(INSTALL_DIR) $(1)/etc/cups
+	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
 
-    $(INSTALL_DIR) $(1)/usr/lib/cups
-    $(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/* $(1)/usr/lib/cups/
+	$(INSTALL_DIR) $(1)/usr/lib/cups
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/* $(1)/usr/lib/cups/
 
-    $(INSTALL_DIR) $(1)/usr/share/cups
-    $(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
+	$(INSTALL_DIR) $(1)/usr/share/cups
+	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
 
-    for d in cache certs logs spool; do \
-        $(INSTALL_DIR) $(1)/var/run/cups/$$d; \
-    done
+	for d in cache certs logs spool; do \
+		$(INSTALL_DIR) $(1)/var/run/cups/$$d; \
+	done
 
-    $(INSTALL_DIR) $(1)/etc/init.d
-    $(INSTALL_BIN) ./files/cupsd.init $(1)/etc/init.d/cupsd
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/cupsd.init $(1)/etc/init.d/cupsd
 endef
 
 define Package/cups/conffiles
