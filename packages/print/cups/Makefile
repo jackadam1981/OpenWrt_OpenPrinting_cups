@@ -28,7 +28,7 @@ define Package/cups
   SUBMENU:=Printing
   TITLE:=Common Unix Printing System (CUPS)
   URL:=https://openprinting.org/cups/
-  DEPENDS:=+libpthread +zlib +libjpeg +libpng +libopenssl +libusb-1.0 +libstdcpp
+  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0
 endef
 
 define Package/cups/description
