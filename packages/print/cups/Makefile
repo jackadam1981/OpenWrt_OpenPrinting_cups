@@ -20,6 +20,8 @@ PKG_MAINTAINER:=OpenPrinting Community <printing-discuss@lists.linuxfoundation.o
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
 
+PKG_BUILD_DEPENDS:=bison/host flex/host
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/cups
