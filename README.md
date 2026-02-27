@@ -8,7 +8,7 @@
 
 1. **Build CUPS**：使用 [OpenWrt gh-action-sdk](https://github.com/openwrt/gh-action-sdk) 自动编译 CUPS 包。推送到 `main`/`master` 分支或提交 PR 时会触发构建，编译产物（`.ipk`）会作为 Artifact 提供下载。支持架构：`x86_64`、`aarch64`、`mips_24kc`。
 
-2. **Check for CUPS Updates**：每天 UTC 0:00 定时检查 [OpenPrinting/cups](https://github.com/OpenPrinting/cups) 是否有新版本。若有新发布，会自动更新 `packages/print/cups/Makefile` 中的 `PKG_VERSION` 和 `PKG_HASH`，并创建 Pull Request 供合并。
+2. **Check for CUPS Updates**：每天 UTC 0:00 定时检查 [OpenPrinting/cups](https://github.com/OpenPrinting/cups) 是否有新版本。若有新发布，会自动更新 `packages/print/cups/Makefile` 并直接推送到 master，无需手动合并。
 
 ## 使用方式
 

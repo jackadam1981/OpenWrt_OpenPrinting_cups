@@ -1,5 +1,5 @@
 # 定时检查 OpenPrinting/cups 新版本并更新 Makefile
-# 每天 UTC 0:00 运行，若有新版本则创建 PR
+# 每天 UTC 0:00 运行，若有新版本则直接推送 master（全自动，无需合并）
 name: Check for CUPS Updates
 
 on:
@@ -13,39 +13,23 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Check for new CUPS release and update
         id: update
         run: bash ./.github/scripts/update-cups.sh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Pull Request
+      - name: Commit and push
         if: steps.update.outputs.updated == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: bump CUPS to ${{ steps.update.outputs.version }}"
-          committer: GitHub <noreply@github.com>
-          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
-          signoff: false
-          branch: cups-update-${{ steps.update.outputs.version }}
-          delete-branch: true
-          title: "chore: bump CUPS to ${{ steps.update.outputs.version }}"
-          body: |
-            自动更新：检测到 [OpenPrinting/cups](https://github.com/OpenPrinting/cups) 新版本 ${{ steps.update.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/print/cups/Makefile
+          git commit -m "chore: bump CUPS to ${{ steps.update.outputs.version }}
 
-            - **PKG_VERSION**: ${{ steps.update.outputs.old_version }} → ${{ steps.update.outputs.version }}
-            - **PKG_HASH**: 已更新为对应 source tarball 的 SHA256
-
-            请合并前确认构建通过。
-          labels: |
-            dependencies
-            automated
+          - PKG_VERSION: ${{ steps.update.outputs.old_version }} → ${{ steps.update.outputs.version }}
+          - PKG_HASH: 已更新为对应 source tarball 的 SHA256"
+          git push origin HEAD:master
