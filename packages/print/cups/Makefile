@@ -22,7 +22,6 @@ PKG_INSTALL:=1
 PKG_BUILD_DEPENDS:=bison/host flex/host
 
 include $(INCLUDE_DIR)/package.mk
-include $(INCLUDE_DIR)/autotools.mk
 
 define Package/cups
   SECTION:=net
@@ -54,10 +53,33 @@ CONFIGURE_VARS += \
     ac_cv_cups_use_networking=yes
 
 TARGET_CFLAGS += -fPIC
-TARGET_LDFLAGS += -Wl,--as-needed
+TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 
-define Build/Prepare
-	$(call Build/Prepare/Default)
+define Build/Configure
+	$(call Build/Configure/Default, \
+		--with-pdftops=none \
+		--without-perl \
+		--without-python \
+		--without-php \
+		--enable-libusb \
+		--disable-acl \
+		--disable-dnssd \
+		--disable-avahi \
+		--disable-ldap \
+		--disable-pam \
+		--disable-slp \
+		--disable-tiff, \
+		UNAME="Linux" \
+		LIBS="$(TARGET_LDFLAGS) -lz -lpng -ljpeg -lssl -lcrypto -lusb-1.0" \
+	)
+endef
+
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR) \
+		$(TARGET_CONFIGURE_OPTS) \
+		BUILDROOT="$(PKG_INSTALL_DIR)" \
+		STRIP="/bin/true" \
+		all install
 endef
 
 define Package/cups/install
