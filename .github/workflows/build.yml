@@ -1,0 +1,42 @@
+# OpenWrt CUPS Package Build
+# 使用 OpenWrt SDK 编译适配 OpenWrt 的 CUPS 包
+name: Build CUPS for OpenWrt
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.arch }} build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x86_64
+          - aarch64
+          - mips_24kc
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build CUPS package
+        uses: openwrt/gh-action-sdk@main
+        env:
+          ARCH: ${{ matrix.arch }}
+          FEEDNAME: openprinting_cups
+          PACKAGES: cups
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: cups-${{ matrix.arch }}-packages
+          path: bin/**/cups*.ipk
+          if-no-files-found: error

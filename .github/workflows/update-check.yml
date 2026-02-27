@@ -1,0 +1,51 @@
+# 定时检查 OpenPrinting/cups 新版本并更新 Makefile
+# 每天 UTC 0:00 运行，若有新版本则创建 PR
+name: Check for CUPS Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-check:
+    name: Check OpenPrinting releases
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new CUPS release and update
+        id: update
+        run: bash ./.github/scripts/update-cups.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        if: steps.update.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: bump CUPS to ${{ steps.update.outputs.version }}"
+          committer: GitHub <noreply@github.com>
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          signoff: false
+          branch: cups-update-${{ steps.update.outputs.version }}
+          delete-branch: true
+          title: "chore: bump CUPS to ${{ steps.update.outputs.version }}"
+          body: |
+            自动更新：检测到 [OpenPrinting/cups](https://github.com/OpenPrinting/cups) 新版本 ${{ steps.update.outputs.version }}
+
+            - **PKG_VERSION**: ${{ steps.update.outputs.old_version }} → ${{ steps.update.outputs.version }}
+            - **PKG_HASH**: 已更新为对应 source tarball 的 SHA256
+
+            请合并前确认构建通过。
+          labels: |
+            dependencies
+            automated
