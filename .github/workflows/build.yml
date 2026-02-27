@@ -18,8 +18,20 @@ jobs:
       matrix:
         arch:
           - x86_64
-          - aarch64
+          - aarch64_cortex-a72
+          - aarch64_generic
           - mips_24kc
+          - mipsel_24kc
+          - riscv64_generic
+          - arm_cortex-a7_neon-vfpv4
+          - arm_cortex-a9
+          - arm_cortex-a5_vfpv4
+          - arm_fa526
+          - mips_mips32
+          - powerpc_8548
+          - powerpc_464fp
+          - stm32-stm32mp1
+          - lantiq-xrx200_legacy
 
     steps:
       - name: Checkout repository

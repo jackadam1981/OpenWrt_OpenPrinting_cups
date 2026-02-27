@@ -6,7 +6,7 @@
 
 本仓库配置了 GitHub Actions：
 
-1. **Build CUPS**：使用 [OpenWrt gh-action-sdk](https://github.com/openwrt/gh-action-sdk) 自动编译 CUPS 包。推送到 `main`/`master` 分支或提交 PR 时会触发构建，编译产物（`.ipk`）会作为 Artifact 提供下载。支持架构：`x86_64`、`aarch64`、`mips_24kc`。
+1. **Build CUPS**：使用 [OpenWrt gh-action-sdk](https://github.com/openwrt/gh-action-sdk) 自动编译 CUPS 包。推送到 `main`/`master` 分支或提交 PR 时会触发构建，编译产物（`.ipk`）会作为 Artifact 提供下载。支持架构：x86_64、aarch64_cortex-a72、aarch64_generic、mips_24kc、mipsel_24kc、riscv64_generic、arm_cortex-a7_neon-vfpv4、arm_cortex-a9、arm_cortex-a5_vfpv4、arm_fa526、mips_mips32、powerpc_8548、powerpc_464fp、stm32-stm32mp1、lantiq-xrx200_legacy 等 15 种 target。
 
 2. **Check for CUPS Updates**：每天 UTC 0:00 定时检查 [OpenPrinting/cups](https://github.com/OpenPrinting/cups) 是否有新版本。若有新发布，会自动更新 `packages/print/cups/Makefile` 并直接推送到 master，无需手动合并。
 
