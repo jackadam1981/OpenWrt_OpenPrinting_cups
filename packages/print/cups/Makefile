@@ -22,6 +22,7 @@ PKG_INSTALL:=1
 PKG_BUILD_DEPENDS:=bison/host flex/host
 
 include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/autotools.mk
 
 define Package/cups
   SECTION:=net
