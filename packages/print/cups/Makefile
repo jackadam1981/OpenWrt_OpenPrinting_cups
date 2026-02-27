@@ -3,11 +3,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cups
-PKG_VERSION:=2.4.14
+PKG_VERSION:=2.4.16
 PKG_RELEASE:=1
 
-# TODO: 更新为对应版本 tarball 的真实 SHA256
-PKG_HASH:=660288020dd6f79caf799811c4c1a3207a48689899ac2093959d70a3bdcb7699
+PKG_HASH:=0339587204b4f9428dd0592eb301dec0bf9ea6ea8dce5d9690d56be585aba92d
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-source.tar.gz
 PKG_SOURCE_URL:=https://github.com/OpenPrinting/cups/releases/download/v$(PKG_VERSION)/
