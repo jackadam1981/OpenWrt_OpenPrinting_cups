@@ -87,11 +87,19 @@ define Package/cups/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/cupsd $(1)/usr/sbin/
 
 	$(INSTALL_DIR) $(1)/usr/bin
-	for bin in cancel cupsaccept cupsdisable cupsenable cupsfilter \
-		cupsreject lp lpadmin lpinfo lpmove lpoptions lpr lprm; do \
-		[ -f $(PKG_INSTALL_DIR)/usr/bin/$$bin ] && \
-			$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/$$bin $(1)/usr/bin/; \
-	done
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/cancel $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/cupsaccept $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/cupsdisable $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/cupsenable $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/cupsfilter $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/cupsreject $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/lp $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/lpadmin $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/lpinfo $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/lpmove $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/lpoptions $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/lpr $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/lprm $(1)/usr/bin/
 
 	$(INSTALL_DIR) $(1)/etc/cups
 	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
