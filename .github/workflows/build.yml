@@ -29,12 +29,24 @@ jobs:
           - arch: aarch64_generic
             target: rockchip
             subtarget: armv8
+          - arch: aarch64_cortex-a53_filogic
+            target: mediatek
+            subtarget: filogic
           - arch: mips_24kc
             target: malta
             subtarget: be
           - arch: mipsel_24kc
             target: ramips
             subtarget: mt7621
+          - arch: mipsel_24kc_rt305x
+            target: ramips
+            subtarget: rt305x
+          - arch: mips_24kc_ath79
+            target: ath79
+            subtarget: generic
+          - arch: mips_24kc_ath79_tiny
+            target: ath79
+            subtarget: tiny
           - arch: arm_cortex-a7_neon-vfpv4
             target: sunxi
             subtarget: cortexa7
