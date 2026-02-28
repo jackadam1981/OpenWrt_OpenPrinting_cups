@@ -102,29 +102,26 @@ libcups
 
 ## 4 包结构（本项目采用）
 
+四个包互相独立，可任意安装其一或组合，无交叉依赖。
+
 | 包名 | 依赖 | 安装内容 | 面向用户 |
 |------|------|----------|----------|
 | **cups-mini** | zlib, libjpeg-turbo, libpng, libopenssl, libusb-1.0, libstdcpp | cupsd, cupsctl, cupsfilter, libcups, libcupsimage, backend/filter/cgi/daemon/driver/monitor, 配置, 文档, init | 最小打印服务器（Web 管理） |
-| **cups-bsd** | cups-mini | lpr, lpq, lprm, lpc | BSD 风格命令 |
-| **cups-client** | cups-mini | lp, cancel, lpadmin, lpinfo, lpstat, cupsaccept, cupsfilter, lpmove 等 | System V 风格命令 |
-| **cups-full** | cups-mini + cups-bsd + cups-client | 元包，无文件 | 全功能包：包含 mini、bsd、client 的全部功能 |
+| **cups-bsd** | 同上 | mini 全部 + lpr, lpq, lprm, lpc | 服务器 + BSD 命令，可独立安装 |
+| **cups-client** | 同上 | mini 全部 + lp, cancel, lpadmin, cupsaccept 等 | 服务器 + System V 命令，可独立安装 |
+| **cups-full** | 同上 | mini + bsd + client 全部内容 | 全功能包，可独立安装 |
 
 ## 4 包依赖关系
 
-```
-cups-mini
-  ├── cups-bsd
-  ├── cups-client
-  └── cups-full（依赖上述三者）
-```
+四个包无交叉依赖，仅依赖系统库。
 
 ## 4 包安装组合
 
 | 需求 | 安装 |
 |------|------|
 | 最小打印服务器（Web 管理） | `opkg install cups-mini` |
-| + BSD 命令 | `opkg install cups-mini cups-bsd` |
-| + System V 管理 | `opkg install cups-mini cups-client` |
+| 服务器 + BSD 命令 | `opkg install cups-bsd`（已含 mini） |
+| 服务器 + System V 命令 | `opkg install cups-client`（已含 mini） |
 | 全功能 | `opkg install cups-full` |
 
 ## 与单包 / 7 包方案对比

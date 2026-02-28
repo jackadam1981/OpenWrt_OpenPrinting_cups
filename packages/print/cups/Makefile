@@ -43,33 +43,32 @@ endef
 
 define Package/cups-bsd
 $(call Package/cups/Default)
-  TITLE:=CUPS - BSD Commands
-  DEPENDS:=+cups-mini
+  TITLE:=CUPS - mini + BSD Commands
+  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
 endef
 
 define Package/cups-bsd/description
- BSD 风格打印命令：lpr、lpq、lprm、lpc。
+ 含 mini 全部内容 + BSD 风格命令（lpr、lpq、lprm、lpc）。可独立安装。
 endef
 
 define Package/cups-client
 $(call Package/cups/Default)
-  TITLE:=CUPS - System V Client Commands
-  DEPENDS:=+cups-mini
+  TITLE:=CUPS - mini + System V Client Commands
+  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
 endef
 
 define Package/cups-client/description
- System V 风格客户端：lp、cancel、lpadmin、lpinfo、lpstat、cupsaccept 等。
+ 含 mini 全部内容 + System V 风格客户端（lp、cancel、lpadmin 等）。可独立安装。
 endef
 
 define Package/cups-full
 $(call Package/cups/Default)
   TITLE:=CUPS - Full (mini + bsd + client)
-  DEPENDS:=+cups-mini +cups-bsd +cups-client
+  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
 endef
 
 define Package/cups-full/description
- 全功能包：包含 mini、bsd、client 三个包的全部功能。
- 元包，一键安装打印服务器 + BSD 命令 + System V 命令。
+ 全功能包：自包含 mini + bsd + client 全部内容，可独立安装，无交叉依赖。
 endef
 
 CONFIGURE_ARGS += \
@@ -148,13 +147,22 @@ define Package/cups-mini/conffiles
 endef
 
 define Package/cups-bsd/install
+	$(call Package/cups-mini/install,$(1))
+
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{lpr,lpq,lprm} $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/lpc $(1)/usr/sbin/
 endef
 
+define Package/cups-bsd/conffiles
+/etc/cups/cups-files.conf
+/etc/cups/cupsd.conf
+endef
+
 define Package/cups-client/install
+	$(call Package/cups-mini/install,$(1))
+
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat} $(1)/usr/bin/
 
@@ -163,8 +171,43 @@ define Package/cups-client/install
 	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
 endef
 
+define Package/cups-client/conffiles
+/etc/cups/cups-files.conf
+/etc/cups/cupsd.conf
+endef
+
 define Package/cups-full/install
-	:
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsctl,cupsd,cupsfilter,cupsaccept,lpadmin,lpinfo,lpmove,lpc} $(1)/usr/sbin/
+	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
+
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat,lpq,lpr,lprm} $(1)/usr/bin/
+
+	$(INSTALL_DIR) $(1)/etc/cups
+	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
+
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcupsimage.so* $(1)/usr/lib/
+
+	$(INSTALL_DIR) $(1)/usr/lib/cups
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/* $(1)/usr/lib/cups/
+
+	$(INSTALL_DIR) $(1)/usr/share/cups
+	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
+
+	for d in cache certs logs spool; do \
+		$(INSTALL_DIR) $(1)/var/run/cups/$$d; \
+	done
+
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/cupsd.init $(1)/etc/init.d/cupsd
+endef
+
+define Package/cups-full/conffiles
+/etc/cups/cups-files.conf
+/etc/cups/cupsd.conf
 endef
 
 $(eval $(call BuildPackage,cups-mini))

@@ -39,10 +39,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 使用 24.10 产出 .ipk（opkg 格式）；不加版本号则用 main 产出 .apk
       - name: Build CUPS packages
         uses: openwrt/gh-action-sdk@main
         env:
-          ARCH: ${{ matrix.arch }}
+          ARCH: ${{ matrix.arch }}-24.10
           FEEDNAME: openprinting_cups
           PACKAGES: cups
           V: s
