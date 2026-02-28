@@ -1,5 +1,5 @@
 # OpenWrt CUPS Package Build
-# 使用 OpenWrt SDK 编译适配 OpenWrt 的 CUPS 包
+# 从 downloads.openwrt.org 下载 SDK，产出 .ipk（opkg 格式，适配 24.10.x）
 name: Build CUPS for OpenWrt
 
 on:
@@ -9,29 +9,47 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+env:
+  OPENWRT_VERSION: "24.10.0"
+
 jobs:
   build:
-    name: ${{ matrix.arch }} build
+    name: ${{ matrix.target }}/${{ matrix.subtarget }} build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - x86_64
-          - aarch64_cortex-a72
-          - aarch64_generic
-          - mips_24kc
-          - mipsel_24kc
-          - riscv64_generic
-          - arm_cortex-a7_neon-vfpv4
-          - arm_cortex-a9
-          - arm_cortex-a5_vfpv4
-          - arm_fa526
-          - mips_mips32
-          - powerpc_8548
-          - powerpc_464fp
-          - stm32-stm32mp1
-          - lantiq-xrx200_legacy
+        include:
+          - arch: x86_64
+            target: x86
+            subtarget: "64"
+          - arch: aarch64_cortex-a72
+            target: mvebu
+            subtarget: cortexa72
+          - arch: aarch64_generic
+            target: rockchip
+            subtarget: armv8
+          - arch: mips_24kc
+            target: malta
+            subtarget: be
+          - arch: mipsel_24kc
+            target: ramips
+            subtarget: mt7621
+          - arch: arm_cortex-a7_neon-vfpv4
+            target: sunxi
+            subtarget: cortexa7
+          - arch: arm_cortex-a9
+            target: mvebu
+            subtarget: cortexa9
+          - arch: powerpc_8548
+            target: mpc85xx
+            subtarget: p1020
+          - arch: stm32-stm32mp1
+            target: stm32
+            subtarget: stm32mp1
+          - arch: lantiq-xrx200_legacy
+            target: lantiq
+            subtarget: xrx200
 
     steps:
       - name: Checkout repository
@@ -39,27 +57,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 使用 24.10 产出 .ipk（opkg 格式）；不加版本号则用 main 产出 .apk
+      - name: Install zstd
+        run: sudo apt-get update && sudo apt-get install -y zstd
+
       - name: Build CUPS packages
-        uses: openwrt/gh-action-sdk@main
         env:
-          ARCH: ${{ matrix.arch }}-24.10
-          FEEDNAME: openprinting_cups
-          PACKAGES: cups
-          V: s
-          BUILD_LOG: "1"
+          FEED_DIR: ${{ github.workspace }}
+        run: |
+          chmod +x .github/scripts/build-with-sdk.sh
+          .github/scripts/build-with-sdk.sh ${{ matrix.target }} ${{ matrix.subtarget }}
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: cups-${{ matrix.arch }}-packages
-          path: bin/**/cups*
-          if-no-files-found: ignore
+          path: openwrt-sdk-*/bin/**/cups*.ipk
+          if-no-files-found: warn
 
       - name: Upload build logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cups-${{ matrix.arch }}-logs
-          path: logs/
+          path: openwrt-sdk-*/logs/
           if-no-files-found: ignore
