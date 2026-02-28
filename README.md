@@ -34,7 +34,7 @@ GitHub Actions 从 [downloads.openwrt.org](https://downloads.openwrt.org) 下载
 | **D-Link DIR-505** | Atheros AR1311 | ath79/generic | cups-mips_24kc_ath79-packages |
 | **TP-Link TL-WR720N** | Atheros AR9331 | ath79/tiny | cups-mips_24kc_ath79_tiny-packages |
 | **VoCore** | Ralink RT5350F | ramips/rt305x | cups-mipsel_24kc_rt305x-packages |
-| **Mi WiFi Mini** | MediaTek MT7620A | ramips/mt7620 | cups-mipsel_24kc-packages |
+| **Mi WiFi Mini** | MediaTek MT7620A | ramips/mt7620 | cups-mipsel_24kc_mt7620-packages |
 | **新路由3 (Newifi D2)** | MediaTek MT7621 | ramips/mt7621 | cups-mipsel_24kc-packages |
 | **CMCC RAX3000M** | MediaTek MT7981B | mediatek/filogic | cups-aarch64_cortex-a53_filogic-packages |
 
