@@ -72,6 +72,7 @@ define Package/cups-full/description
 endef
 
 CONFIGURE_ARGS += \
+    --libdir=/usr/lib \
     --disable-dbus \
     --disable-launchd \
     --disable-systemd \
@@ -91,6 +92,7 @@ TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 
 define Build/Configure
 	$(call Build/Configure/Default, \
+		--enable-shared \
 		--with-pdftops=none \
 		--without-perl \
 		--without-python \
