@@ -23,18 +23,53 @@ PKG_BUILD_DEPENDS:=bison/host flex/host
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/cups
+define Package/cups/Default
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Printing
-  TITLE:=Common Unix Printing System (CUPS)
   URL:=https://openprinting.org/cups/
+endef
+
+define Package/cups-mini
+$(call Package/cups/Default)
+  TITLE:=CUPS - Print Server (mini)
   DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
 endef
 
-define Package/cups/description
- CUPS (Common Unix Printing System) 是 OpenPrinting 主导的跨平台打印服务框架。
- 它提供 IPP/IPP Everywhere 兼容的打印服务器、调度与驱动管理能力。
+define Package/cups-mini/description
+ CUPS 打印服务器核心（mini），含 cupsd、库、backend、filter、cgi-bin。
+ 支持 Web 管理（http://IP:631）。适合资源有限的设备。
+endef
+
+define Package/cups-bsd
+$(call Package/cups/Default)
+  TITLE:=CUPS - BSD Commands
+  DEPENDS:=+cups-mini
+endef
+
+define Package/cups-bsd/description
+ BSD 风格打印命令：lpr、lpq、lprm、lpc。
+endef
+
+define Package/cups-client
+$(call Package/cups/Default)
+  TITLE:=CUPS - System V Client Commands
+  DEPENDS:=+cups-mini
+endef
+
+define Package/cups-client/description
+ System V 风格客户端：lp、cancel、lpadmin、lpinfo、lpstat、cupsaccept 等。
+endef
+
+define Package/cups-full
+$(call Package/cups/Default)
+  TITLE:=CUPS - Full (mini + bsd + client)
+  DEPENDS:=+cups-mini +cups-bsd +cups-client
+endef
+
+define Package/cups-full/description
+ 全功能包：包含 mini、bsd、client 三个包的全部功能。
+ 元包，一键安装打印服务器 + BSD 命令 + System V 命令。
 endef
 
 CONFIGURE_ARGS += \
@@ -82,13 +117,9 @@ define Build/Compile
 		all install
 endef
 
-define Package/cups/install
+define Package/cups-mini/install
 	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsctl,cupsd,cupsfilter,cupsaccept,lpadmin,lpinfo,lpmove,lpc} $(1)/usr/sbin/
-	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
-
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat,lpq,lpr,lprm} $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsctl,cupsd,cupsfilter} $(1)/usr/sbin/
 
 	$(INSTALL_DIR) $(1)/etc/cups
 	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
@@ -111,10 +142,33 @@ define Package/cups/install
 	$(INSTALL_BIN) ./files/cupsd.init $(1)/etc/init.d/cupsd
 endef
 
-define Package/cups/conffiles
+define Package/cups-mini/conffiles
 /etc/cups/cups-files.conf
 /etc/cups/cupsd.conf
 endef
 
-$(eval $(call BuildPackage,cups))
+define Package/cups-bsd/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{lpr,lpq,lprm} $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/lpc $(1)/usr/sbin/
+endef
+
+define Package/cups-client/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat} $(1)/usr/bin/
+
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,cupsfilter,lpadmin,lpinfo,lpmove} $(1)/usr/sbin/
+	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
+endef
+
+define Package/cups-full/install
+	:
+endef
+
+$(eval $(call BuildPackage,cups-mini))
+$(eval $(call BuildPackage,cups-bsd))
+$(eval $(call BuildPackage,cups-client))
+$(eval $(call BuildPackage,cups-full))
 

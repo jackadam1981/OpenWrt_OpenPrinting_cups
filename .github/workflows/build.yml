@@ -39,12 +39,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build CUPS package
+      - name: Build CUPS packages
         uses: openwrt/gh-action-sdk@main
         env:
           ARCH: ${{ matrix.arch }}
           FEEDNAME: openprinting_cups
-          PACKAGES: cups
+          PACKAGES: cups-mini cups-bsd cups-client cups-full
           V: s
           BUILD_LOG: "1"
 
