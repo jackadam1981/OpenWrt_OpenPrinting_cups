@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cups-${{ matrix.arch }}-packages
-          path: bin/**/cups*.ipk
+          path: bin/**/cups*
           if-no-files-found: ignore
 
       - name: Upload build logs
