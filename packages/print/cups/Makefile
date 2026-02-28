@@ -29,7 +29,7 @@ define Package/cups
   SUBMENU:=Printing
   TITLE:=Common Unix Printing System (CUPS)
   URL:=https://openprinting.org/cups/
-  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0
+  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
 endef
 
 define Package/cups/description
@@ -92,6 +92,10 @@ define Package/cups/install
 
 	$(INSTALL_DIR) $(1)/etc/cups
 	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
+
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcupsimage.so* $(1)/usr/lib/
 
 	$(INSTALL_DIR) $(1)/usr/lib/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/cups/* $(1)/usr/lib/cups/
