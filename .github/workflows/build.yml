@@ -38,6 +38,9 @@ jobs:
           - arch: mipsel_24kc
             target: ramips
             subtarget: mt7621
+          - arch: mipsel_24kc
+            target: ramips
+            subtarget: mt7620
           - arch: mipsel_24kc_rt305x
             target: ramips
             subtarget: rt305x

@@ -30,12 +30,13 @@ GitHub Actions 从 [downloads.openwrt.org](https://downloads.openwrt.org) 下载
 
 | 设备型号 | 芯片 | OpenWrt target/subtarget | Artifact |
 |----------|------|--------------------------|----------|
+| x86/64 设备 | - | x86/64 | cups-x86_64-packages |
 | **D-Link DIR-505** | Atheros AR1311 | ath79/generic | cups-mips_24kc_ath79-packages |
 | **TP-Link TL-WR720N** | Atheros AR9331 | ath79/tiny | cups-mips_24kc_ath79_tiny-packages |
 | **VoCore** | Ralink RT5350F | ramips/rt305x | cups-mipsel_24kc_rt305x-packages |
+| **Mi WiFi Mini** | MediaTek MT7620A | ramips/mt7620 | cups-mipsel_24kc-packages |
+| **新路由3 (Newifi D2)** | MediaTek MT7621 | ramips/mt7621 | cups-mipsel_24kc-packages |
 | **CMCC RAX3000M** | MediaTek MT7981B | mediatek/filogic | cups-aarch64_cortex-a53_filogic-packages |
-| x86/64 设备 | - | x86/64 | cups-x86_64-packages |
-| MT7621 路由器 | MediaTek MT7621 | ramips/mt7621 | cups-mipsel_24kc-packages |
 
 其他设备可查 [OpenWrt 设备页](https://openwrt.org/toh/start)，选择对应 target/subtarget 的 artifact。
 

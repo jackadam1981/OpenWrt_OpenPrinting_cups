@@ -128,10 +128,10 @@ define Package/cups-mini/install
 	sed -i 's/Listen localhost:631/Listen *:631/' $(1)/etc/cups/cupsd.conf
 	# Remove IdleExitTimeout if unsupported by this build (avoids "Unknown directive" error)
 	sed -i '/^IdleExitTimeout/d' $(1)/etc/cups/cupsd.conf
-	# Add Allow from private IP ranges only inside <Location> (not Policy <Limit>)
-	sed -i '/<Location/,/<\/Location>/{/  Order allow,deny/a\  Allow from 192.168.0.0\/16}' $(1)/etc/cups/cupsd.conf
-	sed -i '/<Location/,/<\/Location>/{/  Order allow,deny/a\  Allow from 172.16.0.0\/12}' $(1)/etc/cups/cupsd.conf
-	sed -i '/<Location/,/<\/Location>/{/  Order allow,deny/a\  Allow from 10.0.0.0\/8}' $(1)/etc/cups/cupsd.conf
+	# Add Allow from private IP ranges (Location uses Order allow,deny; Policy uses Order deny,allow)
+	sed -i '/  Order allow,deny/a\  Allow from 192.168.0.0\/16' $(1)/etc/cups/cupsd.conf
+	sed -i '/  Order allow,deny/a\  Allow from 172.16.0.0\/12' $(1)/etc/cups/cupsd.conf
+	sed -i '/  Order allow,deny/a\  Allow from 10.0.0.0\/8' $(1)/etc/cups/cupsd.conf
 
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
