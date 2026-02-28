@@ -129,9 +129,9 @@ define Package/cups-mini/install
 	# Allow HTTP admin access (default Required forces HTTPS)
 	sed -i '/^# Default authentication type/a DefaultEncryption IfRequested' $(1)/etc/cups/cupsd.conf
 	# Add Allow private IP ranges only (10.x, 172.16-31.x, 192.168.x) - append in reverse order
-	sed -i '/^  Order allow,deny$$/a\  Allow 192.168.0.0\/16' $(1)/etc/cups/cupsd.conf
-	sed -i '/^  Order allow,deny$$/a\  Allow 172.16.0.0\/12' $(1)/etc/cups/cupsd.conf
-	sed -i '/^  Order allow,deny$$/a\  Allow 10.0.0.0\/8' $(1)/etc/cups/cupsd.conf
+	sed -i '/  Order allow,deny/a\  Allow 192.168.0.0\/16' $(1)/etc/cups/cupsd.conf
+	sed -i '/  Order allow,deny/a\  Allow 172.16.0.0\/12' $(1)/etc/cups/cupsd.conf
+	sed -i '/  Order allow,deny/a\  Allow 10.0.0.0\/8' $(1)/etc/cups/cupsd.conf
 
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
