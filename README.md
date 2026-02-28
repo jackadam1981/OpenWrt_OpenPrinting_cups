@@ -75,6 +75,12 @@ GitHub Actions 从 [downloads.openwrt.org](https://downloads.openwrt.org) 下载
 4. `make menuconfig`，在 Network -> Printing 中选择 cups。
 5. 运行 `make package/cups/{clean,compile} V=s` 或构建完整固件。
 
+## Web 管理 (http://IP:631)
+
+- 管理入口：**http://设备IP:631/admin**（需用 root 及 root 密码登录）。
+- **同时出现「请求的条目过大」且没有登录框**：多为升级后保留了旧 conffile。升级包已带自动修复（postinst），修复后执行 **`/etc/init.d/cupsd restart`** 即可。若未生效，请手动修改 `/etc/cups/cupsd.conf`：1）在 `MaxLogSize` 下一行添加 `MaxRequestSize 0`；2）把所有 `Allow 10.0.0.0/8`、`Allow 172.16.0.0/12`、`Allow 192.168.0.0/16` 改为 **Allow from** 同网段（如 `Allow from 192.168.0.0/16`），保存后 `/etc/init.d/cupsd restart`。
+- **仅不出现登录框**：确认 `/etc/group` 中组名为 **lpadmin**（小写），并为 root 设置密码：`passwd root`。若仍不出现，尝试**无痕/隐私模式**或**清除浏览器缓存**后重新访问。
+
 ## 注意事项
 
 - CUPS 依赖 `libusb-1.0`, `libjpeg-turbo`, `libpng`, `zlib`, `libopenssl`, `libstdcpp`，请确保已选。

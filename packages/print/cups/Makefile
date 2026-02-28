@@ -126,12 +126,12 @@ define Package/cups-mini/install
 	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
 	# Listen on all interfaces, allow LAN access for web UI
 	sed -i 's/Listen localhost:631/Listen *:631/' $(1)/etc/cups/cupsd.conf
-	# Allow HTTP admin access (default Required forces HTTPS)
-	sed -i '/^# Default authentication type/a DefaultEncryption IfRequested' $(1)/etc/cups/cupsd.conf
-	# Add Allow private IP ranges only (10.x, 172.16-31.x, 192.168.x) - append in reverse order
-	sed -i '/  Order allow,deny/a\  Allow 192.168.0.0\/16' $(1)/etc/cups/cupsd.conf
-	sed -i '/  Order allow,deny/a\  Allow 172.16.0.0\/12' $(1)/etc/cups/cupsd.conf
-	sed -i '/  Order allow,deny/a\  Allow 10.0.0.0\/8' $(1)/etc/cups/cupsd.conf
+	# Remove IdleExitTimeout if unsupported by this build (avoids "Unknown directive" error)
+	sed -i '/^IdleExitTimeout/d' $(1)/etc/cups/cupsd.conf
+	# Add Allow from private IP ranges only inside <Location> (not Policy <Limit>)
+	sed -i '/<Location/,/<\/Location>/{/  Order allow,deny/a\  Allow from 192.168.0.0\/16}' $(1)/etc/cups/cupsd.conf
+	sed -i '/<Location/,/<\/Location>/{/  Order allow,deny/a\  Allow from 172.16.0.0\/12}' $(1)/etc/cups/cupsd.conf
+	sed -i '/<Location/,/<\/Location>/{/  Order allow,deny/a\  Allow from 10.0.0.0\/8}' $(1)/etc/cups/cupsd.conf
 
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
@@ -172,7 +172,6 @@ define Package/cups-bsd/conffiles
 /etc/cups/cups-files.conf
 /etc/cups/cupsd.conf
 endef
-
 define Package/cups-client/install
 	$(call Package/cups-mini/install,$(1))
 
@@ -188,7 +187,6 @@ define Package/cups-client/conffiles
 /etc/cups/cups-files.conf
 /etc/cups/cupsd.conf
 endef
-
 define Package/cups-full/install
 	$(call Package/cups-mini/install,$(1))
 	# + bsd
@@ -208,7 +206,6 @@ define Package/cups-full/conffiles
 /etc/cups/cups-files.conf
 /etc/cups/cupsd.conf
 endef
-
 $(eval $(call BuildPackage,cups-mini))
 $(eval $(call BuildPackage,cups-bsd))
 $(eval $(call BuildPackage,cups-client))
