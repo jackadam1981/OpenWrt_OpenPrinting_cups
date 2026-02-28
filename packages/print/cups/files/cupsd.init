@@ -7,9 +7,20 @@ USE_PROCD=1
 PROG=/usr/sbin/cupsd
 CONFFILE=/etc/cups/cupsd.conf
 
+boot() {
+    # Create lp/lpadmin group/user for CUPS (OpenWrt has none by default)
+    [ -z "$(grep '^lp:' /etc/group 2>/dev/null)" ] && echo 'lp:x:7:' >> /etc/group
+    [ -z "$(grep '^lpadmin:' /etc/group 2>/dev/null)" ] && echo 'lpadmin:x:19:root' >> /etc/group
+    [ -z "$(grep '^lp:' /etc/passwd 2>/dev/null)" ] && echo 'lp:x:7:7:Printing:/var/run/cups:/bin/false' >> /etc/passwd
+    # Create runtime dirs (/var/run is tmpfs on OpenWrt)
+    mkdir -p /var/run/cups/cache /var/run/cups/certs /var/run/cups/logs /var/run/cups/spool
+    chown lp:lp /var/run/cups /var/run/cups/cache /var/run/cups/certs /var/run/cups/logs /var/run/cups/spool 2>/dev/null || chmod -R 755 /var/run/cups
+}
+
 start_service() {
+    boot
     procd_open_instance
-    procd_set_param command "$PROG" -f "$CONFFILE"
+    procd_set_param command "$PROG" -c "$CONFFILE" -f
     procd_set_param respawn 3600 5 5
     procd_close_instance
 }

@@ -124,6 +124,12 @@ define Package/cups-mini/install
 
 	$(INSTALL_DIR) $(1)/etc/cups
 	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
+	# Listen on all interfaces, allow LAN access for web UI
+	sed -i 's/Listen localhost:631/Listen *:631/' $(1)/etc/cups/cupsd.conf
+	# Allow HTTP admin access (default Required forces HTTPS)
+	sed -i '/^# Default authentication type/a DefaultEncryption IfRequested' $(1)/etc/cups/cupsd.conf
+	# Add Allow from all to Location blocks
+	sed -i 's/^  Order allow,deny$/  Order allow,deny\n  Allow from all/' $(1)/etc/cups/cupsd.conf
 
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
@@ -134,6 +140,9 @@ define Package/cups-mini/install
 
 	$(INSTALL_DIR) $(1)/usr/share/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
+
+	$(INSTALL_DIR) $(1)/usr/share/locale
+	-if [ -d $(PKG_INSTALL_DIR)/usr/share/locale ]; then $(CP) -r $(PKG_INSTALL_DIR)/usr/share/locale/* $(1)/usr/share/locale/; fi
 
 	for d in cache certs logs spool; do \
 		$(INSTALL_DIR) $(1)/var/run/cups/$$d; \
@@ -188,6 +197,9 @@ define Package/cups-full/install
 
 	$(INSTALL_DIR) $(1)/etc/cups
 	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
+	sed -i 's/Listen localhost:631/Listen *:631/' $(1)/etc/cups/cupsd.conf
+	sed -i '/^# Default authentication type/a DefaultEncryption IfRequested' $(1)/etc/cups/cupsd.conf
+	sed -i 's/^  Order allow,deny$/  Order allow,deny\n  Allow from all/' $(1)/etc/cups/cupsd.conf
 
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
@@ -198,6 +210,9 @@ define Package/cups-full/install
 
 	$(INSTALL_DIR) $(1)/usr/share/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
+
+	$(INSTALL_DIR) $(1)/usr/share/locale
+	-if [ -d $(PKG_INSTALL_DIR)/usr/share/locale ]; then $(CP) -r $(PKG_INSTALL_DIR)/usr/share/locale/* $(1)/usr/share/locale/; fi
 
 	for d in cache certs logs spool; do \
 		$(INSTALL_DIR) $(1)/var/run/cups/$$d; \
