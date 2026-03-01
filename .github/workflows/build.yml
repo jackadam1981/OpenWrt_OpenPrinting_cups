@@ -110,11 +110,13 @@ jobs:
           make package/cups/prepare -j$(nproc) V=s
 
       - name: Copy zh_CN Web templates (Web 管理界面中文模板)
+        id: copy_zh_cn
         env:
           FEED_DIR: ${{ github.workspace }}
         run: |
           cd ${{ steps.sdk.outputs.dir }}
           CUPS_SRC=$(find build_dir -maxdepth 4 -type d -name "cups-2.4*" 2>/dev/null | head -1)
+          echo "cups_src=${CUPS_SRC}" >> $GITHUB_OUTPUT
           if [ -n "$CUPS_SRC" ] && [ -d "$FEED_DIR/templates/zh_CN" ]; then
             echo "Copying Web UI zh_CN templates -> $CUPS_SRC/templates/zh_CN/"
             mkdir -p "$CUPS_SRC/templates/zh_CN"
@@ -130,10 +132,34 @@ jobs:
             [ ! -d "$FEED_DIR/templates/zh_CN" ] && echo "Skip: templates/zh_CN not found"
           fi
 
+      - name: Debug - compile 前确认 zh_CN 在源码树
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          CUPS_SRC="${{ steps.copy_zh_cn.outputs.cups_src }}"
+          if [ -z "$CUPS_SRC" ] || [ ! -d "$CUPS_SRC" ]; then echo "Skip: CUPS_SRC not set"; exit 0; fi
+          echo "=== 1. 复制后 templates/ 下语言目录 ==="
+          ls -d "$CUPS_SRC"/templates/*/ 2>/dev/null || true
+          echo "=== 2. templates/zh_CN 文件数 ==="
+          ls "$CUPS_SRC/templates/zh_CN" 2>/dev/null | wc -l
+          echo "=== 3. locale 中 cups_zh_CN.po ==="
+          ls -la "$CUPS_SRC/locale/cups_zh_CN.po" 2>/dev/null || echo "not found"
+
       - name: Build CUPS packages
         run: |
           cd ${{ steps.sdk.outputs.dir }}
           make package/cups/compile -j$(nproc) V=s
+
+      - name: Debug - compile 后 LANGUAGES 与 ipk 内 templates
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          CUPS_SRC=$(find build_dir -maxdepth 4 -type d -name "cups-2.4*" 2>/dev/null | head -1)
+          echo "=== 1. Makedefs LANGUAGES ==="
+          grep -E "^LANGUAGES=" "$CUPS_SRC/Makedefs" 2>/dev/null || echo "not found"
+          echo "=== 2. compile 后 templates/ 语言目录 ==="
+          ls -d "$CUPS_SRC"/templates/*/ 2>/dev/null || true
+          echo "=== 3. ipk 内 usr/share/cups/templates/ ==="
+          IPK=$(find . -path "./openwrt-sdk-*/bin/*/packages/*/cups-mini_*.ipk" 2>/dev/null | head -1)
+          if [ -n "$IPK" ]; then ar p "$IPK" data.tar.gz | tar -tz 2>/dev/null | grep "usr/share/cups/templates/" | head -80; else echo "ipk not found"; fi
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
