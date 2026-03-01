@@ -88,6 +88,17 @@ CONFIGURE_VARS += \
     ac_cv_cups_use_networking=yes
 
 TARGET_CFLAGS += -fPIC
+
+# 在 prepare 阶段复制 zh_CN Web 模板，确保 compile 时（含 make install）源码树中已存在
+# 若在 CI 中复制，compile 可能重跑 prepare 并覆盖；放在 Build/Prepare 中可保证每次 prepare 后都有 zh_CN
+define Build/Prepare
+	$(call Build/Prepare/Default)
+	@if [ -d "$(CURDIR)/../../templates/zh_CN" ]; then \
+		mkdir -p $(PKG_BUILD_DIR)/templates/zh_CN && \
+		cp $(CURDIR)/../../templates/zh_CN/*.tmpl $(PKG_BUILD_DIR)/templates/zh_CN/ 2>/dev/null || true; \
+		echo "Copied zh_CN templates: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; \
+	fi
+endef
 TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 
 define Build/Configure
