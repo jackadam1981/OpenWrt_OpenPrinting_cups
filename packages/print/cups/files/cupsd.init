@@ -20,11 +20,8 @@ boot() {
     chown -R lp:lp /var/cache/cups /var/spool/cups 2>/dev/null || chmod -R 755 /var/cache/cups /var/spool/cups
 }
 
-start_pre() {
-    boot
-}
-
 start_service() {
+    boot
     procd_open_instance
     procd_set_param command "$PROG" -c "$CONFFILE" -f
     procd_set_param respawn 3600 5 5

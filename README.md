@@ -82,6 +82,54 @@ GitHub Actions 从 [downloads.openwrt.org](https://downloads.openwrt.org) 下载
 - **同时出现「请求的条目过大」且没有登录框**：多为升级后保留了旧 conffile。升级包已带自动修复（postinst），修复后执行 **`/etc/init.d/cupsd restart`** 即可。若未生效，请手动修改 `/etc/cups/cupsd.conf`：1）在 `MaxLogSize` 下一行添加 `MaxRequestSize 0`；2）把所有 `Allow 10.0.0.0/8`、`Allow 172.16.0.0/12`、`Allow 192.168.0.0/16` 改为 **Allow from** 同网段（如 `Allow from 192.168.0.0/16`），保存后 `/etc/init.d/cupsd restart`。
 - **仅不出现登录框**：确认 `/etc/group` 中组名为 **lpadmin**（小写），并为 root 设置密码：`passwd root`。若仍不出现，尝试**无痕/隐私模式**或**清除浏览器缓存**后重新访问。
 
+## 故障排除指南
+
+### Web 管理问题
+
+| 现象 | 原因 | 处理 |
+|------|------|------|
+| **请求的条目过大（413）** | 请求体超限 | 在 `/etc/cups/cupsd.conf` 中 `MaxLogSize` 下一行添加 `MaxRequestSize 0`，保存后 `/etc/init.d/cupsd restart` |
+| **无登录框 / 403 Forbidden** | Location 里 `Allow` 语法错误 | 必须写 `Allow from 10.0.0.0/8` 等，不能只写 `Allow 10.0.0.0/8`；修改后 `/etc/init.d/cupsd restart` |
+| **无登录框（配置无误）** | 浏览器缓存 | 使用**无痕/隐私模式**或清除浏览器缓存后重新访问 `http://IP:631/admin` |
+| **Your account does not have the necessary privileges** | root 未在 lpadmin 组 | 确认 `/etc/group` 有 `lpadmin:x:19:root`；为 root 设置密码：`passwd root` |
+
+### 启动与运行问题
+
+| 现象 | 原因 | 处理 |
+|------|------|------|
+| **Unknown SystemGroup "lpadmin"** | 系统无 lpadmin 组 | 创建组和用户：`echo 'lpadmin:x:19:root' >> /etc/group`，`echo 'lp:x:7:' >> /etc/group`，`echo 'lp:x:7:7:Printing:/var/run/cups:/bin/false' >> /etc/passwd`，然后 `/etc/init.d/cupsd restart`（若已存在则跳过相应行） |
+| **Unable to create directory /var/spool/cups** | 目录未创建 | 执行：`mkdir -p /var/cache/cups /var/spool/cups/tmp`，`chown -R lp:lp /var/cache/cups /var/spool/cups`，`/etc/init.d/cupsd restart` |
+| **Unable to open spool directory /var/spool/cups** | 同上 | 同上 |
+| **Unable to create /var/cache/cups/job.cache.N** | `/var/cache/cups` 缺失 | 同上 |
+| **Unknown directive IdleExitTimeout** | 构建不支持该指令 | 包内已通过 sed 删除；若手动配置，移除 `IdleExitTimeout` 行 |
+
+### cupsd.conf 配置要点
+
+- **Listen**：`Listen *:631` 才能从局域网访问（默认 `localhost:631` 仅本机）
+- **Location**：每个 `<Location>` 各自生效，`/admin` 必须单独配置 Allow + Require
+- **Allow 语法**：必须写 `Allow from 10.0.0.0/8`，不能省略 `from`
+- **Require**：`Require user @SYSTEM` 即可，root 在 lpadmin 组即可登录
+- **DefaultAuthType Basic**：已有则各 Location 不必再写 `AuthType Basic`
+
+### 检查端口与程序
+
+| 步骤 | 命令 | 说明 |
+|------|------|------|
+| **检查 cupsd 是否运行** | `ps \| grep cupsd` 或 `/etc/init.d/cupsd status` | 无输出则未运行，执行 `/etc/init.d/cupsd start` |
+| **检查端口 631 是否监听** | `netstat -tlnp \| grep 631` 或 `ss -tlnp \| grep 631` | 应看到 `*:631` 或 `0.0.0.0:631`，无输出则 cupsd 未监听 |
+
+### 调试
+
+- **LogLevel**：改为 `debug` 或 `debug2` 获取更详细日志；调试完改回 `warn`
+- **错误日志**：`logread | grep -i cups` 或 `/var/log/cups/error_log`（若存在）
+
+### CI 构建问题
+
+| 现象 | 处理 |
+|------|------|
+| ramips/mt7620 构建失败 | 使用 `cups-mipsel_24kc_mt7620-packages`，勿与 mt7621 的 `cups-mipsel_24kc-packages` 混淆 |
+| sed unmatched `{` | 已简化 sed，仅匹配 `Order allow,deny`（Location 用），不修改 Policy 的 `Order deny,allow` |
+
 ## 注意事项
 
 - CUPS 依赖 `libusb-1.0`, `libjpeg-turbo`, `libpng`, `zlib`, `libopenssl`, `libstdcpp`，请确保已选。
@@ -99,3 +147,12 @@ OpenWrt_OpenPrinting_cups/
 │   └── workflows/
 └── README.md
 ```
+晶晨烧录工具刷迷你版固件没有多大问题，但有时候刷大一点的固件，就会卡到 97%报错。
+
+工具的默认超时时间是 150秒，在烧录时会生成temp目录下的burn_config.xml文件，里面配置了烧录各个分区的烧录校验时间。但直接修改xml文件无效，因为它是烧录前自动生成的烧录配置，而不是读取的配置。
+
+因为固件烧录后设备会计算sha1校验值，所以有时候大一点的固件就有可能校验超过150秒，尤其是在烧录完root或system分区，由于这部分占用空间很大，所以很容易校验超时而卡97%报错。
+
+Amlogic USB Burning Tool v2.2.0 （含超时补丁）
+
+安装步骤：先安装exe文件，例如安装在D:\Program Files (x86)\Amlogic\USB_Burning_Tool目录下，然后将UsbRomDrv.dll放到这个文件夹下面。

@@ -60,6 +60,20 @@ echo "==> Installing cups..."
 # defconfig（SDK 通常已包含）
 make defconfig 2>/dev/null || true
 
+# 先 prepare 解压 CUPS 源码，再用仓库内简体中文 .po 替换后编译
+echo "==> Preparing package/cups (download & extract)..."
+make package/cups/prepare -j$(nproc) V=s
+
+ZH_PO="$FEED_DIR/cups_zh_CN.po"
+CUPS_SRC=$(find build_dir -maxdepth 4 -type d -name "cups-2.4*" 2>/dev/null | head -1)
+if [ -n "$CUPS_SRC" ] && [ -f "$ZH_PO" ]; then
+  echo "==> Replacing zh_CN locale: $ZH_PO -> $CUPS_SRC/locale/"
+  cp "$ZH_PO" "$CUPS_SRC/locale/cups_zh_CN.po"
+else
+  [ -z "$CUPS_SRC" ] && echo "==> Skip zh_CN: CUPS source dir not found"
+  [ ! -f "$ZH_PO" ] && echo "==> Skip zh_CN: no $ZH_PO"
+fi
+
 # 构建
 echo "==> Building package/cups/compile..."
 make package/cups/compile -j$(nproc) V=s
