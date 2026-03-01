@@ -94,6 +94,7 @@ TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 define Build/Configure
 	$(call Build/Configure/Default, \
 		--enable-shared \
+		--with-languages=ja \
 		--with-pdftops=none \
 		--without-perl \
 		--without-python \
