@@ -98,23 +98,19 @@ CONFIGURE_VARS += \
 
 TARGET_CFLAGS += -fPIC
 
-# 在 prepare 阶段：有本地 cups 源码则用本地（含 zh_CN po 与可覆盖的 templates），否则下载并覆盖 zh_CN
+# 1) 有本地 cups 源码则复制到 build_dir，否则用 Default 解压 tarball
+# 2) 统一覆盖 zh_CN 模板（来自 feed）
 define Build/Prepare
-	@LOCAL=""; \
-	if [ -f "$(CUPS_LOCAL_SRC_FEEDS)/config-scripts/cups-defaults.m4" ] || [ -f "$(CUPS_LOCAL_SRC)/config-scripts/cups-defaults.m4" ]; then \
-		if [ -f "$(CUPS_LOCAL_SRC_FEEDS)/config-scripts/cups-defaults.m4" ]; then LOCAL="$(CUPS_LOCAL_SRC_FEEDS)"; \
-		else LOCAL="$(CUPS_LOCAL_SRC)"; fi; \
-	fi; \
-	if [ -n "$$LOCAL" ]; then \
-		echo "Using local CUPS source: $$LOCAL"; \
-		rm -rf $(PKG_BUILD_DIR); mkdir -p $(dir $(PKG_BUILD_DIR)); cp -a "$$LOCAL/." "$(PKG_BUILD_DIR)/"; \
-		ZH_CN=""; [ -d "$(CUPS_ZH_CN_FEEDS)" ] && ZH_CN="$(CUPS_ZH_CN_FEEDS)"; [ -z "$$ZH_CN" ] && [ -d "$(CUPS_ZH_CN_TEMPLATES)" ] && ZH_CN="$(CUPS_ZH_CN_TEMPLATES)"; \
-		if [ -n "$$ZH_CN" ]; then mkdir -p "$(PKG_BUILD_DIR)/templates/zh_CN"; cp $$ZH_CN/*.tmpl "$(PKG_BUILD_DIR)/templates/zh_CN/"; echo "Overlaid zh_CN: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; fi; \
-	else \
-		$(call Build/Prepare/Default); \
-		ZH_CN=""; [ -d "$(CUPS_ZH_CN_FEEDS)" ] && ZH_CN="$(CUPS_ZH_CN_FEEDS)"; [ -z "$$ZH_CN" ] && [ -d "$(CUPS_ZH_CN_TEMPLATES)" ] && ZH_CN="$(CUPS_ZH_CN_TEMPLATES)"; \
-		if [ -n "$$ZH_CN" ]; then mkdir -p $(PKG_BUILD_DIR)/templates/zh_CN; cp $$ZH_CN/*.tmpl $(PKG_BUILD_DIR)/templates/zh_CN/; echo "Copied zh_CN: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; fi; \
-	fi
+	$(if $(Prepare/UseLocalCups),$(call Build/Prepare/Local),$(call Build/Prepare/Default))
+	@ZH_CN=""; [ -d "$(CUPS_ZH_CN_FEEDS)" ] && ZH_CN="$(CUPS_ZH_CN_FEEDS)"; [ -z "$$ZH_CN" ] && [ -d "$(CUPS_ZH_CN_TEMPLATES)" ] && ZH_CN="$(CUPS_ZH_CN_TEMPLATES)"; \
+	if [ -n "$$ZH_CN" ]; then mkdir -p $(PKG_BUILD_DIR)/templates/zh_CN; cp $$ZH_CN/*.tmpl $(PKG_BUILD_DIR)/templates/zh_CN/; echo "zh_CN overlaid: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; fi
+endef
+
+# 本地 cups 存在则用本地
+Prepare/UseLocalCups = $(strip $(foreach d,$(CUPS_LOCAL_SRC_FEEDS) $(CUPS_LOCAL_SRC),$(if $(wildcard $(d)/config-scripts/cups-defaults.m4),$(d),)))
+define Build/Prepare/Local
+	@echo "Using local CUPS source: $(Prepare/UseLocalCups)"; \
+	rm -rf $(PKG_BUILD_DIR); mkdir -p $(dir $(PKG_BUILD_DIR)); cp -a "$(Prepare/UseLocalCups)/." "$(PKG_BUILD_DIR)/"
 endef
 TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 
