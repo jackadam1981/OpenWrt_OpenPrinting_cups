@@ -171,6 +171,7 @@ define Package/cups-mini/install
 	if [ -n "$$ZH_SRC" ]; then \
 		$(INSTALL_DIR) $(1)/usr/share/cups/templates/zh_CN; \
 		$(CP) $$ZH_SRC/*.tmpl $(1)/usr/share/cups/templates/zh_CN/; \
+		ln -sf zh_CN $(1)/usr/share/cups/templates/zh-CN; \
 		echo "Installed zh_CN templates from $$ZH_SRC ($$(ls $$ZH_SRC/*.tmpl 2>/dev/null | wc -l) files)"; \
 	else \
 		echo "zh_CN skip: neither path exists"; \
