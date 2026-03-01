@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>lprm(1)</title>
+  </head>
+  <body>
+    <h1 id="lprm-1">lprm(1)</h1>
+    <h2 id="lprm-1.name">Name</h2>
+<p>lprm - cancel print jobs
+</p>
+    <h2 id="lprm-1.synopsis">Synopsis</h2>
+<p><strong>lprm</strong>
+[
+<strong>-h </strong><em>hostname</em>[<strong>:</strong><em>port</em>]
+] [
+<strong>-E</strong>
+] [
+<strong>-U</strong>
+<em>username</em>
+] [
+<strong>-P</strong>
+<em>destination</em>[<em>/instance</em>]
+
+] [
+<strong>-</strong>
+] [
+<em>job-id(s)</em>
+]
+</p>
+    <h2 id="lprm-1.description">Description</h2>
+<p><strong>lprm</strong>
+cancels print jobs that have been queued for printing.
+If no arguments are supplied, the current job on the default destination is canceled.
+You can specify one or more job ID numbers to cancel those jobs or use the <em>-</em> option to cancel all jobs.
+</p>
+    <h2 id="lprm-1.options">Options</h2>
+<p>The
+<strong>lprm</strong>
+command supports the following options:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-E</strong><br>
+Forces encryption when connecting to the server.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-P </strong><em>destination</em>[<em>/instance</em>]<br>
+Specifies the destination printer or class.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-U </strong><em>username</em><br>
+Specifies an alternate username.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-h </strong><em>server</em>[<em>:port</em>]<br>
+Specifies an alternate server.
+Note: This option must occur before all others.
+</p>
+    <h2 id="lprm-1.conforming-to">Conforming To</h2>
+<p>The CUPS version of
+<strong>lprm</strong>
+is compatible with the standard Berkeley command of the same name.
+</p>
+    <h2 id="lprm-1.examples">Examples</h2>
+<p>Cancel the current job on the default printer:
+</p>
+    <pre>
+    lprm
+
+</pre>
+<p>Cancel job 1234:
+</p>
+    <pre>
+    lprm 1234
+
+</pre>
+<p>Cancel all jobs:
+</p>
+    <pre>
+    lprm -
+</pre>
+    <h2 id="lprm-1.see-also">See Also</h2>
+<a href="cancel.html"><p><strong>cancel</strong>(1),</a>
+
+<a href="lp.html"><strong>lp</strong>(1),</a>
+
+<a href="lpq.html"><strong>lpq</strong>(1),</a>
+
+<a href="lpr.html"><strong>lpr</strong>(1),</a>
+
+<a href="lpstat.html"><strong>lpstat</strong>(1),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="lprm-1.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

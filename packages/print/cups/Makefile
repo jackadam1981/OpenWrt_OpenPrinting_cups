@@ -28,6 +28,9 @@ CUPS_FEED_ROOT := $(dir $(lastword $(MAKEFILE_LIST)))../../..
 CUPS_ZH_CN_TEMPLATES := $(CUPS_FEED_ROOT)/templates/zh_CN
 # SDK 下 feed 安装路径（CI 与本地 src-link openprinting_cups 时）
 CUPS_ZH_CN_FEEDS := $(TOPDIR)/feeds/openprinting_cups/templates/zh_CN
+# 本地 CUPS 源码（有则用本地源码构建，含 locale/cups_zh_CN.po 时 LANGUAGES 会含 zh_CN）
+CUPS_LOCAL_SRC := $(CUPS_FEED_ROOT)/cups
+CUPS_LOCAL_SRC_FEEDS := $(TOPDIR)/feeds/openprinting_cups/cups
 
 define Package/cups/Default
   SECTION:=net
@@ -95,14 +98,22 @@ CONFIGURE_VARS += \
 
 TARGET_CFLAGS += -fPIC
 
-# 在 prepare 阶段复制 zh_CN Web 模板，确保 compile 时（含 make install）源码树中已存在
-# 若在 CI 中复制，compile 可能重跑 prepare 并覆盖；放在 Build/Prepare 中可保证每次 prepare 后都有 zh_CN
+# 在 prepare 阶段：有本地 cups 源码则用本地（含 zh_CN po 与可覆盖的 templates），否则下载并覆盖 zh_CN
 define Build/Prepare
-	$(call Build/Prepare/Default)
-	@if [ -d "$(CURDIR)/../../templates/zh_CN" ]; then \
-		mkdir -p $(PKG_BUILD_DIR)/templates/zh_CN && \
-		cp $(CURDIR)/../../templates/zh_CN/*.tmpl $(PKG_BUILD_DIR)/templates/zh_CN/ 2>/dev/null || true; \
-		echo "Copied zh_CN templates: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; \
+	@LOCAL=""; \
+	if [ -f "$(CUPS_LOCAL_SRC_FEEDS)/config-scripts/cups-defaults.m4" ] || [ -f "$(CUPS_LOCAL_SRC)/config-scripts/cups-defaults.m4" ]; then \
+		if [ -f "$(CUPS_LOCAL_SRC_FEEDS)/config-scripts/cups-defaults.m4" ]; then LOCAL="$(CUPS_LOCAL_SRC_FEEDS)"; \
+		else LOCAL="$(CUPS_LOCAL_SRC)"; fi; \
+	fi; \
+	if [ -n "$$LOCAL" ]; then \
+		echo "Using local CUPS source: $$LOCAL"; \
+		rm -rf $(PKG_BUILD_DIR); mkdir -p $(dir $(PKG_BUILD_DIR)); cp -a "$$LOCAL/." "$(PKG_BUILD_DIR)/"; \
+		ZH_CN=""; [ -d "$(CUPS_ZH_CN_FEEDS)" ] && ZH_CN="$(CUPS_ZH_CN_FEEDS)"; [ -z "$$ZH_CN" ] && [ -d "$(CUPS_ZH_CN_TEMPLATES)" ] && ZH_CN="$(CUPS_ZH_CN_TEMPLATES)"; \
+		if [ -n "$$ZH_CN" ]; then mkdir -p "$(PKG_BUILD_DIR)/templates/zh_CN"; cp $$ZH_CN/*.tmpl "$(PKG_BUILD_DIR)/templates/zh_CN/"; echo "Overlaid zh_CN: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; fi; \
+	else \
+		$(call Build/Prepare/Default); \
+		ZH_CN=""; [ -d "$(CUPS_ZH_CN_FEEDS)" ] && ZH_CN="$(CUPS_ZH_CN_FEEDS)"; [ -z "$$ZH_CN" ] && [ -d "$(CUPS_ZH_CN_TEMPLATES)" ] && ZH_CN="$(CUPS_ZH_CN_TEMPLATES)"; \
+		if [ -n "$$ZH_CN" ]; then mkdir -p $(PKG_BUILD_DIR)/templates/zh_CN; cp $$ZH_CN/*.tmpl $(PKG_BUILD_DIR)/templates/zh_CN/; echo "Copied zh_CN: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; fi; \
 	fi
 endef
 TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib

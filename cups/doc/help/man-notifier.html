@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>notifier(7)</title>
+  </head>
+  <body>
+    <h1 id="notifier-7">notifier(7)</h1>
+    <h2 id="notifier-7.name">Name</h2>
+<p>notifier - cups notification interface
+</p>
+    <h2 id="notifier-7.synopsis">Synopsis</h2>
+<p><strong>notifier</strong>
+<em>recipient</em>
+[
+<em>user-data</em>
+]
+</p>
+    <h2 id="notifier-7.description">Description</h2>
+<p>The CUPS notifier interface provides a standard method for adding support for new event notification methods to CUPS.
+Each notifier delivers one or more IPP events from the standard input to the specified recipient.
+</p>
+    <p>Notifiers <strong>MUST</strong> read IPP messages from the standard input using the
+<strong>ippNew</strong>()
+
+and
+<strong>ippReadFile</strong>()
+
+functions and exit on error.
+Notifiers are encouraged to exit after a suitable period of inactivity, however they may exit after reading the first message or stay running until an error is seen.
+Notifiers inherit the environment and can use the logging mechanism documented in
+<a href="filter.html"><strong>filter</strong>(7).</a>
+
+</p>
+    <h2 id="notifier-7.see-also">See Also</h2>
+<a href="cupsd.html"><p><strong>cupsd</strong>(8),</a>
+
+<a href="filter.html"><strong>filter</strong>(7),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="notifier-7.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

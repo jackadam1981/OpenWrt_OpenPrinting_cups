@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>lpq(1)</title>
+  </head>
+  <body>
+    <h1 id="lpq-1">lpq(1)</h1>
+    <h2 id="lpq-1.name">Name</h2>
+<p>lpq - show printer queue status
+</p>
+    <h2 id="lpq-1.synopsis">Synopsis</h2>
+<p><strong>lpq</strong>
+[
+<strong>-h </strong><em>server</em>[<strong>:</strong><em>port</em>]
+] [
+<strong>-E</strong>
+] [
+<strong>-U</strong>
+<em>username</em>
+] [
+<strong>-P </strong><em>destination</em>[<strong>/</strong><em>instance</em>]
+] [
+<strong>-a</strong>
+] [
+<strong>-l</strong>
+] [
+<strong>+</strong><em>interval</em>
+
+]
+</p>
+    <h2 id="lpq-1.description">Description</h2>
+<p><strong>lpq</strong> shows the current print queue status on the named printer.
+Jobs queued on the default destination will be shown if no printer or class is specified on the command-line.
+</p>
+    <p>The <em>+interval</em> option allows you to continuously report the jobs in the queue until the queue is empty; the list of jobs is shown once every <em>interval</em> seconds.
+</p>
+    <h2 id="lpq-1.options">Options</h2>
+<p><strong>lpq</strong> supports the following options:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-E</strong><br>
+Forces encryption when connecting to the server.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-P </strong><em>destination</em>[<strong>/</strong><em>instance</em>]<br>
+Specifies an alternate printer or class name.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-U </strong><em>username</em><br>
+Specifies an alternate username.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-a</strong><br>
+Reports jobs on all printers.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-h </strong><em>server</em>[<strong>:</strong><em>port</em>]<br>
+Specifies an alternate server.
+Note: This option must occur before all others.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-l</strong><br>
+Requests a more verbose (long) reporting format.
+</p>
+    <h2 id="lpq-1.see-also">See Also</h2>
+<a href="cancel.html"><p><strong>cancel</strong>(1),</a>
+
+<a href="lp.html"><strong>lp</strong>(1),</a>
+
+<a href="lpr.html"><strong>lpr</strong>(1),</a>
+
+<a href="lprm.html"><strong>lprm</strong>(1),</a>
+
+<a href="lpstat.html"><strong>lpstat</strong>(1),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="lpq-1.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

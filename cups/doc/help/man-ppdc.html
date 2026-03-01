@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>ppdc(1)</title>
+  </head>
+  <body>
+    <h1 id="ppdc-1">ppdc(1)</h1>
+    <h2 id="ppdc-1.name">Name</h2>
+<p>ppdc - cups ppd compiler (deprecated)
+</p>
+    <h2 id="ppdc-1.synopsis">Synopsis</h2>
+<p><strong>ppdc</strong>
+[
+<strong>-D </strong><em>name</em>[<strong>=</strong><em>value</em>]
+] [
+<strong>-I</strong>
+<em>include-directory</em>
+] [
+<strong>-c</strong>
+<em>message-catalog</em>
+] [
+<strong>-d</strong>
+<em>output-directory</em>
+] [
+<strong>-l</strong>
+<em>language(s)</em>
+] [
+<strong>-m</strong>
+] [
+<strong>-t</strong>
+] [
+<strong>-v</strong>
+] [
+<strong>-z</strong>
+] [
+<strong>--cr</strong>
+] [
+<strong>--crlf</strong>
+] [
+<strong>--lf</strong>
+]
+<em>source-file</em>
+</p>
+    <h2 id="ppdc-1.description">Description</h2>
+<p><strong>ppdc</strong> compiles PPDC source files into one or more PPD files.
+<strong>This program is deprecated and will be removed in a future release of CUPS.</strong>
+</p>
+    <h2 id="ppdc-1.options">Options</h2>
+<p><strong>ppdc</strong> supports the following options:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-D </strong><em>name</em>[<strong>=</strong><em>value</em>]<br>
+Sets the named variable for use in the source file.
+It is equivalent to using the <em>#define</em> directive in the source file.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-I </strong><em>include-directory</em><br>
+Specifies an alternate include directory.
+Multiple <em>-I</em> options can be supplied to add additional directories.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-c </strong><em>message-catalog</em><br>
+Specifies a single message catalog file in GNU gettext (filename.po) or Apple strings (filename.strings) format to be used for localization.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-d </strong><em>output-directory</em><br>
+Specifies the output directory for PPD files.
+The default output directory is &quot;ppd&quot;.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-l </strong><em>language(s)</em><br>
+Specifies one or more languages to use when localizing the PPD file(s).
+The default language is &quot;en&quot; (English).
+Separate multiple languages with commas, for example &quot;de_DE,en_UK,es_ES,es_MX,es_US,fr_CA,fr_FR,it_IT&quot; will create PPD files with German, UK English, Spanish (Spain, Mexico, and US), French (France and Canada), and Italian languages in each file.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-m</strong><br>
+Specifies that the output filename should be based on the ModelName value instead of FileName or PCFileName.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-t</strong><br>
+Specifies that PPD files should be tested instead of generated.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-v</strong><br>
+Specifies verbose output, basically a running status of which files are being loaded or written.
+<strong>-z</strong>
+Generates compressed PPD files (filename.ppd.gz).
+The default is to generate uncompressed PPD files.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--cr</strong><br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--crlf</strong><br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--lf</strong><br>
+Specifies the line ending to use - carriage return, carriage return and line feed, or line feed alone.
+The default is to use the line feed character alone.
+</p>
+    <h2 id="ppdc-1.notes">Notes</h2>
+<p>PPD files are deprecated and will no longer be supported in a future feature release of CUPS.
+Printers that do not support IPP can be supported using applications such as
+<a href="ippeveprinter.html"><strong>ippeveprinter</strong>(1).</a>
+
+</p>
+    <h2 id="ppdc-1.see-also">See Also</h2>
+<a href="ppdhtml.html"><p><strong>ppdhtml</strong>(1),</a>
+
+<a href="ppdi.html"><strong>ppdi</strong>(1),</a>
+
+<a href="ppdmerge.html"><strong>ppdmerge</strong>(1),</a>
+
+<a href="ppdpo.html"><strong>ppdpo</strong>(1),</a>
+
+<a href="ppdcfile.html"><strong>ppdcfile</strong>(5),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="ppdc-1.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

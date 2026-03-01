@@ -1,0 +1,34 @@
+	<h1>{ENV:CUPS_VERSION}</h1>
+	<P>CUPS — поддерживающая большинство стандартов, свободная подсистема печати, разрабатываемая компанией <a class="jumbolink" href="https://openprinting.github.io/" target="_blank">OpenPrinting</a> для операционной системы Linux® и других UNIX<SUP>&reg;</SUP>-подобных операционных систем. CUPS uses <a href="https://www.pwg.org/ipp/everywhere.html" target="_blank">IPP Everywhere™</a> to support printing to local and network printers</P>
+      </div>
+      <div class="row">
+        <h2 class="title">Сервер</h2>
+	<form action="/admin/" method="POST"><input type="hidden" name="org.cups.sid" value="{$org.cups.sid}"><input type="hidden" name="OP" value="add-printer"><input type="submit" value="Добавить принтер"></form>
+	<form action="/admin/" method="POST"><input type="hidden" name="org.cups.sid" value="{$org.cups.sid}"><input type="hidden" name="OP" value="find-new-printers"><input type="submit" value="Найти новый принтер"></form>
+	<form action="/jobs/" method="GET"><input type="submit" value="Управление заданиями"></form>
+	<form action="/printers/" method="GET"><input type="submit" value="Управление принтерами"></form>
+	<form action="/admin/" method="GET"><input type="submit" value="Сохранить"></form>
+        {#alert_title=0?:<p>Alerts:</p>
+        <ul>{[alert_title]
+          <li><a href="{alert_href}">{alert_title}</a></li>}
+        </ul>}
+      </div>
+      <div class="row">
+	<div class="thirds">
+	  <H2>CUPS для пользователей</H2>
+	  <P><A HREF="help/overview.html">Введение в CUPS</A></P>
+	  <P><A HREF="help/options.html">Печать из командной строки</A></P>
+	</div>
+	<div class="thirds">
+	  <H2>CUPS для администраторов</H2>
+	  <P><A HREF="help/admin.html">Добавление принтеров и групп</A></P>
+	  <P><A HREF="help/policies.html">Управление доступом</A></P>
+	  <P><A HREF="help/network.html">Использование сетевых принтеров</A></P>
+	  <p><a href="help/firewalls.html">Firewalls</a></p>
+	  <p><a href="help/man-cupsd.conf.html">Справочник по cupsd.conf</a></p>
+	</div>
+	<div class="thirds">
+	  <H2>CUPS для разработчиков</H2>
+	  <p><a href="help/cupspm.html">CUPS Programming Manual</a></p>
+	  <P><A HREF="help/api-filter.html">Разработка фильтров и модулей</A></P>
+	</div>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>cupstestppd(1)</title>
+  </head>
+  <body>
+    <h1 id="cupstestppd-1">cupstestppd(1)</h1>
+    <h2 id="cupstestppd-1.name">Name</h2>
+<p>cupstestppd - test conformance of ppd files (deprecated)
+</p>
+    <h2 id="cupstestppd-1.synopsis">Synopsis</h2>
+<p><strong>cupstestppd</strong>
+[
+<strong>-I</strong>
+<em>category</em>
+] [
+<strong>-R</strong>
+<em>rootdir</em>
+] [
+<strong>-W</strong>
+<em>category</em>
+] [
+<strong>-q</strong>
+] [
+<strong>-r</strong>
+] [
+<strong>-v</strong>[<strong>v</strong>]
+]
+<em>filename.ppd[.gz]</em>
+[ ...
+<em>filename.ppd[.gz]</em>
+]
+<br>
+<strong>cupstestppd</strong>
+[
+<strong>-R</strong>
+<em>rootdir</em>
+] [
+<strong>-W</strong>
+<em>category</em>
+] [
+<strong>-q</strong>
+] [
+<strong>-r</strong>
+] [
+<strong>-v</strong>[<strong>v</strong>]
+]
+<strong>-</strong>
+</p>
+    <h2 id="cupstestppd-1.description">Description</h2>
+<p><strong>cupstestppd</strong> tests the conformance of PPD files to the Adobe PostScript Printer Description file format specification version 4.3.
+It can also be used to list the supported options and available fonts in a PPD file.
+The results of testing and any other output are sent to the standard output.
+</p>
+    <p>The first form of <strong>cupstestppd</strong> tests one or more PPD files on the command-line.
+The second form tests the PPD file provided on the standard input.
+</p>
+    <h2 id="cupstestppd-1.options">Options</h2>
+<p><strong>cupstestppd</strong> supports the following options:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-I filename</strong><br>
+Ignores all PCFileName warnings.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-I filters</strong><br>
+Ignores all filter errors.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-I profiles</strong><br>
+Ignores all profile errors.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-R </strong><em>rootdir</em><br>
+Specifies an alternate root directory for the filter, pre-filter, and other support file checks.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-W constraints</strong><br>
+Report all UIConstraint errors as warnings.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-W defaults</strong><br>
+Except for size-related options, report all default option errors as warnings.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-W filters</strong><br>
+Report all filter errors as warnings.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-W profiles</strong><br>
+Report all profile errors as warnings.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-W sizes</strong><br>
+Report all media size errors as warnings.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-W translations</strong><br>
+Report all translation errors as warnings.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-W all</strong><br>
+Report all of the previous errors as warnings.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-W none</strong><br>
+Report all of the previous errors as errors.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-q</strong><br>
+Specifies that no information should be displayed.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-r</strong><br>
+Relaxes the PPD conformance requirements so that common whitespace, control character, and formatting problems are not treated as hard errors.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-v</strong><br>
+Specifies that detailed conformance testing results should be displayed rather than the concise PASS/FAIL/ERROR status.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-vv</strong><br>
+Specifies that all information in the PPD file should be displayed in addition to the detailed conformance testing results.
+</p>
+    <p>The <em>-q</em>, <em>-v</em>, and <em>-vv</em> options are mutually exclusive.
+</p>
+    <h2 id="cupstestppd-1.exit-status">Exit Status</h2>
+<p><strong>cupstestppd</strong> returns zero on success and non-zero on error.
+The error codes are as follows:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;">1<br>
+Bad command-line arguments or missing PPD filename.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;">2<br>
+Unable to open or read PPD file.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;">3<br>
+The PPD file contains format errors that cannot be skipped.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;">4<br>
+The PPD file does not conform to the Adobe PPD specification.
+</p>
+    <h2 id="cupstestppd-1.examples">Examples</h2>
+<p>The following command will test all PPD files under the current directory and print the names of each file that does not conform:
+</p>
+    <pre>
+    find . -name \*.ppd \! -exec cupstestppd -q '{}' \; -print
+
+</pre>
+<p>The next command tests all PPD files under the current directory and print detailed conformance testing results for the files that do not conform:
+</p>
+    <pre>
+    find . -name \*.ppd \! -exec cupstestppd -q '{}' \; \
+        -exec cupstestppd -v '{}' \;
+</pre>
+    <h2 id="cupstestppd-1.notes">Notes</h2>
+<p>PPD files are deprecated and will no longer be supported in a future feature release of CUPS.
+Printers that do not support IPP can be supported using applications such as
+<a href="ippeveprinter.html"><strong>ippeveprinter</strong>(1).</a>
+
+</p>
+    <h2 id="cupstestppd-1.see-also">See Also</h2>
+<a href="lpadmin.html"><p><strong>lpadmin</strong>(8),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>),
+Adobe PostScript Printer Description File Format Specification, Version 4.3.
+</p>
+    <h2 id="cupstestppd-1.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>
