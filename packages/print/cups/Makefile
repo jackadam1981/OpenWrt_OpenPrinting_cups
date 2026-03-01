@@ -23,15 +23,6 @@ PKG_BUILD_DEPENDS:=bison/host flex/host
 
 include $(INCLUDE_DIR)/package.mk
 
-# feed 内 zh_CN 模板路径：Makefile 在 packages/print/cups/，上三级为 feed 根
-CUPS_FEED_ROOT := $(dir $(lastword $(MAKEFILE_LIST)))../../..
-CUPS_ZH_CN_TEMPLATES := $(CUPS_FEED_ROOT)/templates/zh_CN
-# SDK 下 feed 安装路径（CI 与本地 src-link openprinting_cups 时）
-CUPS_ZH_CN_FEEDS := $(TOPDIR)/feeds/openprinting_cups/templates/zh_CN
-# 本地 CUPS 源码（有则用本地源码构建，含 locale/cups_zh_CN.po 时 LANGUAGES 会含 zh_CN）
-CUPS_LOCAL_SRC := $(CUPS_FEED_ROOT)/cups
-CUPS_LOCAL_SRC_FEEDS := $(TOPDIR)/feeds/openprinting_cups/cups
-
 define Package/cups/Default
   SECTION:=net
   CATEGORY:=Network
@@ -98,16 +89,6 @@ CONFIGURE_VARS += \
 
 TARGET_CFLAGS += -fPIC
 
-# 1) Default 解压 tarball（保证 Configure 能正确生成 Makedefs）
-# 2) 若本地 cups 存在，覆盖为本地源码（含 locale/cups_zh_CN.po 与 templates/zh_CN）
-# 3) 统一覆盖 zh_CN 模板（来自 feed）
-define Build/Prepare
-	$(call Build/Prepare/Default)
-	@LOCAL=""; [ -f "$(CUPS_LOCAL_SRC_FEEDS)/config-scripts/cups-defaults.m4" ] && LOCAL="$(CUPS_LOCAL_SRC_FEEDS)"; [ -z "$$LOCAL" ] && [ -f "$(CUPS_LOCAL_SRC)/config-scripts/cups-defaults.m4" ] && LOCAL="$(CUPS_LOCAL_SRC)"; \
-	if [ -n "$$LOCAL" ]; then echo "Overwriting with local CUPS: $$LOCAL"; cp -a "$$LOCAL/." "$(PKG_BUILD_DIR)/"; fi; \
-	ZH_CN=""; [ -d "$(CUPS_ZH_CN_FEEDS)" ] && ZH_CN="$(CUPS_ZH_CN_FEEDS)"; [ -z "$$ZH_CN" ] && [ -d "$(CUPS_ZH_CN_TEMPLATES)" ] && ZH_CN="$(CUPS_ZH_CN_TEMPLATES)"; \
-	if [ -n "$$ZH_CN" ]; then mkdir -p $(PKG_BUILD_DIR)/templates/zh_CN; cp $$ZH_CN/*.tmpl $(PKG_BUILD_DIR)/templates/zh_CN/; echo "zh_CN overlaid: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; fi
-endef
 TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 
 define Build/Configure
@@ -162,20 +143,6 @@ define Package/cups-mini/install
 
 	$(INSTALL_DIR) $(1)/usr/share/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
-	# LANGUAGES 不含 zh_CN 时 make install 不会安装 zh_CN，在此补装
-	@ZH_SRC=""; \
-	echo "zh_CN lookup: CUPS_ZH_CN_FEEDS=$(CUPS_ZH_CN_FEEDS)"; \
-	echo "zh_CN lookup: CUPS_ZH_CN_TEMPLATES=$(CUPS_ZH_CN_TEMPLATES)"; \
-	if [ -d "$(CUPS_ZH_CN_FEEDS)" ]; then ZH_SRC="$(CUPS_ZH_CN_FEEDS)"; \
-	elif [ -d "$(CUPS_ZH_CN_TEMPLATES)" ]; then ZH_SRC="$(CUPS_ZH_CN_TEMPLATES)"; fi; \
-	if [ -n "$$ZH_SRC" ]; then \
-		$(INSTALL_DIR) $(1)/usr/share/cups/templates/zh_CN; \
-		$(CP) $$ZH_SRC/*.tmpl $(1)/usr/share/cups/templates/zh_CN/; \
-		ln -sf zh_CN $(1)/usr/share/cups/templates/zh-CN; \
-		echo "Installed zh_CN templates from $$ZH_SRC ($$(ls $$ZH_SRC/*.tmpl 2>/dev/null | wc -l) files)"; \
-	else \
-		echo "zh_CN skip: neither path exists"; \
-	fi
 
 	$(INSTALL_DIR) $(1)/usr/share/locale
 	-if [ -d $(PKG_INSTALL_DIR)/usr/share/locale ]; then $(CP) -r $(PKG_INSTALL_DIR)/usr/share/locale/* $(1)/usr/share/locale/; fi
@@ -213,7 +180,7 @@ define Package/cups-client/install
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat} $(1)/usr/bin/
 
 	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,cupsfilter,lpadmin,lpinfo,lpmove} $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,lpadmin,lpinfo,lpmove} $(1)/usr/sbin/
 	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
 endef
 
@@ -232,7 +199,7 @@ define Package/cups-full/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat} $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,cupsfilter,lpadmin,lpinfo,lpmove} $(1)/usr/sbin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,lpadmin,lpinfo,lpmove} $(1)/usr/sbin/
 	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
 endef
 
