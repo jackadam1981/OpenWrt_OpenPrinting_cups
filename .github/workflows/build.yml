@@ -120,6 +120,11 @@ jobs:
             mkdir -p "$CUPS_SRC/templates/zh_CN"
             for f in "$FEED_DIR/templates/zh_CN/"*.tmpl; do [ -f "$f" ] && cp "$f" "$CUPS_SRC/templates/zh_CN/"; done
             echo "Templates in zh_CN: $(ls "$CUPS_SRC/templates/zh_CN/" 2>/dev/null | wc -l)"
+            echo "--- templates/zh_CN 文件结构复查 ---"
+            ls -la "$CUPS_SRC/templates/zh_CN/"
+            echo "--- 与 templates/ja 对比（数量） ---"
+            echo "zh_CN: $(ls "$CUPS_SRC/templates/zh_CN/"*.tmpl 2>/dev/null | wc -l) .tmpl"
+            echo "ja:    $(ls "$CUPS_SRC/templates/ja/"*.tmpl 2>/dev/null | wc -l) .tmpl"
           else
             [ -z "$CUPS_SRC" ] && echo "Skip: CUPS source dir not found"
             [ ! -d "$FEED_DIR/templates/zh_CN" ] && echo "Skip: templates/zh_CN not found"
