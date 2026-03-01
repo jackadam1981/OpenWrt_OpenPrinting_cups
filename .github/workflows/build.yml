@@ -109,23 +109,20 @@ jobs:
           cd ${{ steps.sdk.outputs.dir }}
           make package/cups/prepare -j$(nproc) V=s
 
-      - name: Replace zh_CN locale (简体中文语言包)
-        id: zh_cn
+      - name: Copy zh_CN Web templates (Web 管理界面中文模板)
         env:
           FEED_DIR: ${{ github.workspace }}
         run: |
           cd ${{ steps.sdk.outputs.dir }}
-          ZH_PO="$FEED_DIR/cups_zh_CN.po"
           CUPS_SRC=$(find build_dir -maxdepth 4 -type d -name "cups-2.4*" 2>/dev/null | head -1)
-          if [ -n "$CUPS_SRC" ] && [ -f "$ZH_PO" ]; then
-            echo "status=replaced" >> $GITHUB_OUTPUT
-            echo "Replaced: $ZH_PO -> $CUPS_SRC/locale/cups_zh_CN.po"
-            cp "$ZH_PO" "$CUPS_SRC/locale/cups_zh_CN.po"
-            ls -la "$CUPS_SRC/locale/cups_zh_CN.po"
+          if [ -n "$CUPS_SRC" ] && [ -d "$FEED_DIR/templates/zh_CN" ]; then
+            echo "Copying Web UI zh_CN templates -> $CUPS_SRC/templates/zh_CN/"
+            mkdir -p "$CUPS_SRC/templates/zh_CN"
+            for f in "$FEED_DIR/templates/zh_CN/"*.tmpl; do [ -f "$f" ] && cp "$f" "$CUPS_SRC/templates/zh_CN/"; done
+            echo "Templates in zh_CN: $(ls "$CUPS_SRC/templates/zh_CN/" 2>/dev/null | wc -l)"
           else
-            echo "status=skipped" >> $GITHUB_OUTPUT
             [ -z "$CUPS_SRC" ] && echo "Skip: CUPS source dir not found"
-            [ ! -f "$ZH_PO" ] && echo "Skip: cups_zh_CN.po not found at $ZH_PO"
+            [ ! -d "$FEED_DIR/templates/zh_CN" ] && echo "Skip: templates/zh_CN not found"
           fi
 
       - name: Build CUPS packages
