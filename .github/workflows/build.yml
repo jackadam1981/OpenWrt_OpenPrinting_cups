@@ -75,12 +75,63 @@ jobs:
       - name: Install zstd
         run: sudo apt-get update && sudo apt-get install -y zstd
 
-      - name: Build CUPS packages
+      - name: Download and extract SDK
+        id: sdk
+        env:
+          TARGET: ${{ matrix.target }}
+          SUBTARGET: ${{ matrix.subtarget }}
+        run: |
+          BASE_URL="https://downloads.openwrt.org/releases/${OPENWRT_VERSION}/targets"
+          TARGET_PATH="${TARGET}/${SUBTARGET}"
+          INDEX=$(curl -sL "${BASE_URL}/${TARGET_PATH}/")
+          SDK_FILE=$(echo "$INDEX" | grep -oE "openwrt-sdk-${OPENWRT_VERSION}-${TARGET}-${SUBTARGET}_[^\"]+\.tar\.zst" | head -1)
+          [ -n "$SDK_FILE" ] || { echo "ERROR: Could not find SDK for ${TARGET_PATH}"; exit 1; }
+          curl -sL -o sdk.tar.zst "${BASE_URL}/${TARGET_PATH}/${SDK_FILE}"
+          tar -I zstd -xf sdk.tar.zst
+          rm sdk.tar.zst
+          SDK_DIR=$(find . -maxdepth 1 -type d -name "openwrt-sdk-*" | head -1)
+          echo "dir=${SDK_DIR}" >> $GITHUB_OUTPUT
+          echo "SDK_DIR=${SDK_DIR}" >> $GITHUB_ENV
+
+      - name: Configure feed
         env:
           FEED_DIR: ${{ github.workspace }}
         run: |
-          chmod +x .github/scripts/build-with-sdk.sh
-          .github/scripts/build-with-sdk.sh ${{ matrix.target }} ${{ matrix.subtarget }}
+          cd ${{ steps.sdk.outputs.dir }}
+          [ -f feeds.conf ] || cp feeds.conf.default feeds.conf
+          echo "src-link openprinting_cups $FEED_DIR" >> feeds.conf
+          ./scripts/feeds update -a
+          ./scripts/feeds install -p openprinting_cups -f cups
+          make defconfig 2>/dev/null || true
+
+      - name: Prepare CUPS source
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          make package/cups/prepare -j$(nproc) V=s
+
+      - name: Replace zh_CN locale (简体中文语言包)
+        id: zh_cn
+        env:
+          FEED_DIR: ${{ github.workspace }}
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          ZH_PO="$FEED_DIR/cups_zh_CN.po"
+          CUPS_SRC=$(find build_dir -maxdepth 4 -type d -name "cups-2.4*" 2>/dev/null | head -1)
+          if [ -n "$CUPS_SRC" ] && [ -f "$ZH_PO" ]; then
+            echo "status=replaced" >> $GITHUB_OUTPUT
+            echo "Replaced: $ZH_PO -> $CUPS_SRC/locale/cups_zh_CN.po"
+            cp "$ZH_PO" "$CUPS_SRC/locale/cups_zh_CN.po"
+            ls -la "$CUPS_SRC/locale/cups_zh_CN.po"
+          else
+            echo "status=skipped" >> $GITHUB_OUTPUT
+            [ -z "$CUPS_SRC" ] && echo "Skip: CUPS source dir not found"
+            [ ! -f "$ZH_PO" ] && echo "Skip: cups_zh_CN.po not found at $ZH_PO"
+          fi
+
+      - name: Build CUPS packages
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          make package/cups/compile -j$(nproc) V=s
 
       - name: Upload packages
         uses: actions/upload-artifact@v4

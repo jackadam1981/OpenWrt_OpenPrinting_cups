@@ -20,7 +20,40 @@ jobs:
 
       - name: Check for new CUPS release and update
         id: update
-        run: bash ./.github/scripts/update-cups.sh
+        run: |
+          MAKEFILE="packages/print/cups/Makefile"
+          current_version=$(grep -E '^PKG_VERSION:=' "$MAKEFILE" | cut -d= -f2)
+          echo "Current version: $current_version"
+
+          api_resp=$(curl -sL "https://api.github.com/repos/OpenPrinting/cups/releases/latest")
+          new_tag=$(echo "$api_resp" | jq -r '.tag_name // empty')
+          [ -n "$new_tag" ] || { echo "Failed to fetch latest release"; exit 1; }
+          new_version="${new_tag#v}"
+          echo "Latest upstream version: $new_version"
+
+          if [ "$current_version" = "$new_version" ]; then
+            echo "Already at latest version"
+            echo "updated=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          if [ "$(printf '%s\n' "$current_version" "$new_version" | sort -V | head -n1)" = "$new_version" ] && [ "$current_version" != "$new_version" ]; then
+            echo "No update needed (current >= latest)"
+            echo "updated=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          tarball_url="https://github.com/OpenPrinting/cups/releases/download/v${new_version}/cups-${new_version}-source.tar.gz"
+          echo "Downloading $tarball_url to compute hash..."
+          new_hash=$(curl -sL "$tarball_url" | sha256sum | cut -d' ' -f1)
+          echo "New SHA256: $new_hash"
+
+          sed -i "s/^PKG_VERSION:=.*/PKG_VERSION:=${new_version}/" "$MAKEFILE"
+          sed -i "s/^PKG_HASH:=.*/PKG_HASH:=${new_hash}/" "$MAKEFILE"
+          sed -i '/^# TODO: 更新为对应版本 tarball 的真实 SHA256$/d' "$MAKEFILE"
+          echo "Makefile updated successfully"
+          echo "updated=true" >> $GITHUB_OUTPUT
+          echo "version=$new_version" >> $GITHUB_OUTPUT
+          echo "old_version=$current_version" >> $GITHUB_OUTPUT
 
       - name: Commit and push
         if: steps.update.outputs.updated == 'true'

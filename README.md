@@ -143,7 +143,6 @@ OpenWrt_OpenPrinting_cups/
 │   ├── files/cupsd.init
 │   └── Makefile
 ├── .github/
-│   ├── scripts/build-with-sdk.sh
 │   └── workflows/
 └── README.md
 ```
