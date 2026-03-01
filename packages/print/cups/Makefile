@@ -153,6 +153,11 @@ define Package/cups-mini/install
 
 	$(INSTALL_DIR) $(1)/usr/share/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
+	# LANGUAGES 不含 zh_CN 时 make install 不会安装 zh_CN，在此补装
+	@if [ -d $(CURDIR)/../../templates/zh_CN ]; then \
+		$(INSTALL_DIR) $(1)/usr/share/cups/templates/zh_CN; \
+		$(CP) $(CURDIR)/../../templates/zh_CN/*.tmpl $(1)/usr/share/cups/templates/zh_CN/; \
+	fi
 
 	$(INSTALL_DIR) $(1)/usr/share/locale
 	-if [ -d $(PKG_INSTALL_DIR)/usr/share/locale ]; then $(CP) -r $(PKG_INSTALL_DIR)/usr/share/locale/* $(1)/usr/share/locale/; fi
