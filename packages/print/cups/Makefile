@@ -23,6 +23,12 @@ PKG_BUILD_DEPENDS:=bison/host flex/host
 
 include $(INCLUDE_DIR)/package.mk
 
+# feed 内 zh_CN 模板路径：Makefile 在 packages/print/cups/，上三级为 feed 根
+CUPS_FEED_ROOT := $(dir $(lastword $(MAKEFILE_LIST)))../../..
+CUPS_ZH_CN_TEMPLATES := $(CUPS_FEED_ROOT)/templates/zh_CN
+# SDK 下 feed 安装路径（CI 与本地 src-link openprinting_cups 时）
+CUPS_ZH_CN_FEEDS := $(TOPDIR)/feeds/openprinting_cups/templates/zh_CN
+
 define Package/cups/Default
   SECTION:=net
   CATEGORY:=Network
@@ -154,9 +160,13 @@ define Package/cups-mini/install
 	$(INSTALL_DIR) $(1)/usr/share/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
 	# LANGUAGES 不含 zh_CN 时 make install 不会安装 zh_CN，在此补装
-	@if [ -d $(CURDIR)/../../templates/zh_CN ]; then \
+	@ZH_SRC=""; \
+	if [ -d "$(CUPS_ZH_CN_TEMPLATES)" ]; then ZH_SRC="$(CUPS_ZH_CN_TEMPLATES)"; \
+	elif [ -d "$(CUPS_ZH_CN_FEEDS)" ]; then ZH_SRC="$(CUPS_ZH_CN_FEEDS)"; fi; \
+	if [ -n "$$ZH_SRC" ]; then \
 		$(INSTALL_DIR) $(1)/usr/share/cups/templates/zh_CN; \
-		$(CP) $(CURDIR)/../../templates/zh_CN/*.tmpl $(1)/usr/share/cups/templates/zh_CN/; \
+		$(CP) $$ZH_SRC/*.tmpl $(1)/usr/share/cups/templates/zh_CN/; \
+		echo "Installed zh_CN templates from $$ZH_SRC"; \
 	fi
 
 	$(INSTALL_DIR) $(1)/usr/share/locale
