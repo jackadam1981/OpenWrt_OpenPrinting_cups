@@ -98,19 +98,15 @@ CONFIGURE_VARS += \
 
 TARGET_CFLAGS += -fPIC
 
-# 1) 有本地 cups 源码则复制到 build_dir，否则用 Default 解压 tarball
-# 2) 统一覆盖 zh_CN 模板（来自 feed）
+# 1) Default 解压 tarball（保证 Configure 能正确生成 Makedefs）
+# 2) 若本地 cups 存在，覆盖为本地源码（含 locale/cups_zh_CN.po 与 templates/zh_CN）
+# 3) 统一覆盖 zh_CN 模板（来自 feed）
 define Build/Prepare
-	$(if $(Prepare/UseLocalCups),$(call Build/Prepare/Local),$(call Build/Prepare/Default))
-	@ZH_CN=""; [ -d "$(CUPS_ZH_CN_FEEDS)" ] && ZH_CN="$(CUPS_ZH_CN_FEEDS)"; [ -z "$$ZH_CN" ] && [ -d "$(CUPS_ZH_CN_TEMPLATES)" ] && ZH_CN="$(CUPS_ZH_CN_TEMPLATES)"; \
+	$(call Build/Prepare/Default)
+	@LOCAL=""; [ -f "$(CUPS_LOCAL_SRC_FEEDS)/config-scripts/cups-defaults.m4" ] && LOCAL="$(CUPS_LOCAL_SRC_FEEDS)"; [ -z "$$LOCAL" ] && [ -f "$(CUPS_LOCAL_SRC)/config-scripts/cups-defaults.m4" ] && LOCAL="$(CUPS_LOCAL_SRC)"; \
+	if [ -n "$$LOCAL" ]; then echo "Overwriting with local CUPS: $$LOCAL"; cp -a "$$LOCAL/." "$(PKG_BUILD_DIR)/"; fi; \
+	ZH_CN=""; [ -d "$(CUPS_ZH_CN_FEEDS)" ] && ZH_CN="$(CUPS_ZH_CN_FEEDS)"; [ -z "$$ZH_CN" ] && [ -d "$(CUPS_ZH_CN_TEMPLATES)" ] && ZH_CN="$(CUPS_ZH_CN_TEMPLATES)"; \
 	if [ -n "$$ZH_CN" ]; then mkdir -p $(PKG_BUILD_DIR)/templates/zh_CN; cp $$ZH_CN/*.tmpl $(PKG_BUILD_DIR)/templates/zh_CN/; echo "zh_CN overlaid: $$(ls $(PKG_BUILD_DIR)/templates/zh_CN/*.tmpl 2>/dev/null | wc -l) files"; fi
-endef
-
-# 本地 cups 存在则用本地
-Prepare/UseLocalCups = $(strip $(foreach d,$(CUPS_LOCAL_SRC_FEEDS) $(CUPS_LOCAL_SRC),$(if $(wildcard $(d)/config-scripts/cups-defaults.m4),$(d),)))
-define Build/Prepare/Local
-	@echo "Using local CUPS source: $(Prepare/UseLocalCups)"; \
-	rm -rf $(PKG_BUILD_DIR); mkdir -p $(dir $(PKG_BUILD_DIR)); cp -a "$(Prepare/UseLocalCups)/." "$(PKG_BUILD_DIR)/"
 endef
 TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 
