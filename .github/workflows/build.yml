@@ -157,9 +157,20 @@ jobs:
           grep -E "^LANGUAGES=" "$CUPS_SRC/Makedefs" 2>/dev/null || echo "not found"
           echo "=== 2. compile 后 templates/ 语言目录 ==="
           ls -d "$CUPS_SRC"/templates/*/ 2>/dev/null || true
-          echo "=== 3. ipk 内 usr/share/cups/templates/ ==="
+          echo "=== 3. ipk 内 usr/share/cups/templates/（列表）==="
           IPK=$(find . -path "./openwrt-sdk-*/bin/*/packages/*/cups-mini_*.ipk" 2>/dev/null | head -1)
-          if [ -n "$IPK" ]; then ar p "$IPK" data.tar.gz | tar -tz 2>/dev/null | grep "usr/share/cups/templates/" | head -80; else echo "ipk not found"; fi
+          if [ -n "$IPK" ]; then
+            ar p "$IPK" data.tar.gz | tar -tz 2>/dev/null | grep "usr/share/cups/templates/" | head -80
+            echo "=== 4. 解包 ipk 验证 zh_CN（与文档一致）==="
+            mkdir -p /tmp/ipk-check && cd /tmp/ipk-check && rm -rf usr data.tar.gz
+            ar x "$OLDPWD/$IPK" data.tar.gz 2>/dev/null && tar -xzf data.tar.gz
+            echo "usr/share/cups/templates/ 目录："
+            ls -la usr/share/cups/templates/ 2>/dev/null || echo "not found"
+            echo "zh_CN 模板数："
+            ls usr/share/cups/templates/zh_CN/ 2>/dev/null | wc -l || echo "0"
+          else
+            echo "ipk not found"
+          fi
 
       - name: Upload packages
         uses: actions/upload-artifact@v4

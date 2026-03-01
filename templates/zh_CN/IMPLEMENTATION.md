@@ -77,6 +77,20 @@
 - **构建顺序**：Prepare（解压）→ 复制 templates/zh_CN 到 $CUPS_SRC/templates/zh_CN → Compile（configure + make all install）。与 ja/ru/fr 一致，由 CUPS 的 install-data 安装 zh_CN。
 - **CI 复查**：复制后在构建日志中执行 `ls -la $CUPS_SRC/templates/zh_CN/`，并与 `templates/ja` 的 .tmpl 数量对比，确认文件结构正确。
 
+### 本地验证 ipk 是否含 zh_CN
+
+解包 cups-mini 的 ipk 查看是否包含 zh_CN 模板：
+
+```bash
+# ipk 为 ar 格式，先解出 data.tar.gz 再解压
+ar x cups-mini_*.ipk
+tar -xzf data.tar.gz
+ls -la usr/share/cups/templates/
+ls usr/share/cups/templates/zh_CN/ | wc -l
+```
+
+若存在 `usr/share/cups/templates/zh_CN/` 且文件数约 66，则 Web 汉化已打进包。
+
 ---
 
 ## 4. 总结
