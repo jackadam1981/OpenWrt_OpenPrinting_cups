@@ -141,8 +141,16 @@ jobs:
           ls -d "$CUPS_SRC"/templates/*/ 2>/dev/null || true
           echo "=== 2. templates/zh_CN 文件数 ==="
           ls "$CUPS_SRC/templates/zh_CN" 2>/dev/null | wc -l
-          echo "=== 3. locale 中 cups_zh_CN.po ==="
+          echo "=== 3. locale 中 cups_zh_CN.po（configure 用此生成 LANGUAGES）==="
           ls -la "$CUPS_SRC/locale/cups_zh_CN.po" 2>/dev/null || echo "not found"
+          echo "=== 4. locale/ 下全部 .po（LANGUAGES 来源）==="
+          ls -1 "$CUPS_SRC/locale"/cups_*.po 2>/dev/null | sed 's|.*/cups_||;s|\.po||' | tr '\n' ' '
+          echo ""
+          echo "=== 5. 模拟 cups-defaults.m4 的 LANGUAGES 值 ==="
+          (cd "$CUPS_SRC" && ls -1 locale/cups_*.po 2>/dev/null | sed -e 's|locale/cups_||' -e 's|\.po||' | tr '\n' ' ')
+          echo ""
+          echo "=== 6. zh_CN 是否含 header.tmpl（FILES 需要）==="
+          ls -la "$CUPS_SRC/templates/zh_CN/header.tmpl" 2>/dev/null || echo "not found"
 
       - name: Build CUPS packages
         run: |
@@ -155,22 +163,59 @@ jobs:
           CUPS_SRC=$(find build_dir -maxdepth 4 -type d -name "cups-2.4*" 2>/dev/null | head -1)
           echo "=== 1. Makedefs LANGUAGES ==="
           grep -E "^LANGUAGES=" "$CUPS_SRC/Makedefs" 2>/dev/null || echo "not found"
-          echo "=== 2. compile 后 templates/ 语言目录 ==="
+          echo "=== 1b. LANGUAGES 是否包含 zh_CN ==="
+          LANG_LINE=$(grep -E "^LANGUAGES=" "$CUPS_SRC/Makedefs" 2>/dev/null) || true
+          if echo "$LANG_LINE" | grep -q "zh_CN"; then echo "是，zh_CN 在 LANGUAGES 中"; else echo "否，zh_CN 不在 LANGUAGES 中"; fi
+          echo "=== 2. Makedefs DATADIR（make install 目标前缀）==="
+          grep -E "^DATADIR=" "$CUPS_SRC/Makedefs" 2>/dev/null || echo "not found"
+          echo "=== 3. compile 后 templates/ 语言目录 ==="
           ls -d "$CUPS_SRC"/templates/*/ 2>/dev/null || true
-          echo "=== 3. ipk 内 usr/share/cups/templates/（列表）==="
+          echo "=== 3b. 模拟 templates/Makefile：LANGUAGES 中且存在 templates/ 的才会 install ==="
+          LANGS=$(grep -E "^LANGUAGES=" "$CUPS_SRC/Makedefs" 2>/dev/null | sed 's/LANGUAGES=//;s/"//g')
+          for lang in $LANGS; do
+            if [ -d "$CUPS_SRC/templates/$lang" ]; then
+              echo "  会安装: $lang ($(ls "$CUPS_SRC/templates/$lang" 2>/dev/null | wc -l) 文件)"
+            else
+              echo "  跳过(无目录): $lang"
+            fi
+          done
+          echo "=== 4. build_dir 内含 templates 且含 ja/zh_CN 的目录（make install 实际写入位置）==="
+          find build_dir -type d -name "templates" 2>/dev/null | while read d; do
+            if [ -d "$d/ja" ] || [ -d "$d/zh_CN" ]; then
+              echo "  -> $d"
+              ls "$d" 2>/dev/null | head -20
+              echo "  zh_CN 数量: $(ls "$d/zh_CN" 2>/dev/null | wc -l)"
+            fi
+          done
+          echo "=== 5. ipk 内 usr/share/cups/templates/（列表）==="
           IPK=$(find . -path "./openwrt-sdk-*/bin/*/packages/*/cups-mini_*.ipk" 2>/dev/null | head -1)
           if [ -n "$IPK" ]; then
-            ar p "$IPK" data.tar.gz | tar -tz 2>/dev/null | grep "usr/share/cups/templates/" | head -80
-            echo "=== 4. 解包 ipk 验证 zh_CN（与文档一致）==="
-            mkdir -p /tmp/ipk-check && cd /tmp/ipk-check && rm -rf usr data.tar.gz
-            ar x "$OLDPWD/$IPK" data.tar.gz 2>/dev/null && tar -xzf data.tar.gz
+            (tar -tzf "$IPK" 2>/dev/null || ar p "$IPK" data.tar.gz 2>/dev/null | tar -tz) | grep "usr/share/cups/templates/" | head -80
+            echo "=== 6. 解包 ipk 验证 zh_CN（tar.gz 格式，与文档一致）==="
+            mkdir -p /tmp/ipk-check && cd /tmp/ipk-check && rm -rf usr data.tar.gz control.tar.gz debian-binary 2>/dev/null
+            if tar -xzf "$OLDPWD/$IPK" 2>/dev/null; then
+              tar -xzf data.tar.gz 2>/dev/null
+            else
+              (cd "$OLDPWD" && ar x "$IPK" data.tar.gz 2>/dev/null) && cp "$OLDPWD/data.tar.gz" . && tar -xzf data.tar.gz
+            fi
             echo "usr/share/cups/templates/ 目录："
             ls -la usr/share/cups/templates/ 2>/dev/null || echo "not found"
             echo "zh_CN 模板数："
             ls usr/share/cups/templates/zh_CN/ 2>/dev/null | wc -l || echo "0"
+            echo "ja 数量（对照）："
+            ls usr/share/cups/templates/ja/ 2>/dev/null | wc -l || echo "0"
           else
             echo "ipk not found"
           fi
+          echo "=== 7. OpenWrt 包 staging 目录（ipkg-* 或 root-* 下 usr/share/cups）==="
+          for root in build_dir/target-*/root-* build_dir/target-*/ipkg-*; do
+            [ -d "$root" ] || continue
+            if [ -d "$root/usr/share/cups/templates" ]; then
+              echo "  -> $root/usr/share/cups/templates"
+              ls "$root/usr/share/cups/templates" 2>/dev/null | head -25
+              echo "  zh_CN: $(ls "$root/usr/share/cups/templates/zh_CN" 2>/dev/null | wc -l)"
+            fi
+          done 2>/dev/null || true
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
