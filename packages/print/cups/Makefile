@@ -161,12 +161,16 @@ define Package/cups-mini/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
 	# LANGUAGES 不含 zh_CN 时 make install 不会安装 zh_CN，在此补装
 	@ZH_SRC=""; \
-	if [ -d "$(CUPS_ZH_CN_TEMPLATES)" ]; then ZH_SRC="$(CUPS_ZH_CN_TEMPLATES)"; \
-	elif [ -d "$(CUPS_ZH_CN_FEEDS)" ]; then ZH_SRC="$(CUPS_ZH_CN_FEEDS)"; fi; \
+	echo "zh_CN lookup: CUPS_ZH_CN_FEEDS=$(CUPS_ZH_CN_FEEDS)"; \
+	echo "zh_CN lookup: CUPS_ZH_CN_TEMPLATES=$(CUPS_ZH_CN_TEMPLATES)"; \
+	if [ -d "$(CUPS_ZH_CN_FEEDS)" ]; then ZH_SRC="$(CUPS_ZH_CN_FEEDS)"; \
+	elif [ -d "$(CUPS_ZH_CN_TEMPLATES)" ]; then ZH_SRC="$(CUPS_ZH_CN_TEMPLATES)"; fi; \
 	if [ -n "$$ZH_SRC" ]; then \
 		$(INSTALL_DIR) $(1)/usr/share/cups/templates/zh_CN; \
 		$(CP) $$ZH_SRC/*.tmpl $(1)/usr/share/cups/templates/zh_CN/; \
-		echo "Installed zh_CN templates from $$ZH_SRC"; \
+		echo "Installed zh_CN templates from $$ZH_SRC ($$(ls $$ZH_SRC/*.tmpl 2>/dev/null | wc -l) files)"; \
+	else \
+		echo "zh_CN skip: neither path exists"; \
 	fi
 
 	$(INSTALL_DIR) $(1)/usr/share/locale
