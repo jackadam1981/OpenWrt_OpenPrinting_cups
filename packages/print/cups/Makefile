@@ -25,10 +25,8 @@ include $(INCLUDE_DIR)/package.mk
 
 define Build/Prepare
 	$(call Build/Prepare/Default,)
-	$(INSTALL_DIR) $(PKG_BUILD_DIR)/doc/zh_CN
-	$(INSTALL_DIR) $(PKG_BUILD_DIR)/templates/zh_CN
-	$(CP) $(CURDIR)/files/zh_CN/doc/* $(PKG_BUILD_DIR)/doc/zh_CN/
-	$(CP) $(CURDIR)/files/zh_CN/templates/* $(PKG_BUILD_DIR)/templates/zh_CN/
+	# 覆盖上游源码树，按 cups 源码结构放置本地化文件
+	$(CP) $(CURDIR)/files/source/* $(PKG_BUILD_DIR)/
 endef
 
 define Package/cups/Default
@@ -102,7 +100,7 @@ TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 define Build/Configure
 	$(call Build/Configure/Default, \
 		--enable-shared \
-		--with-languages="ja zh_CN" \
+		--with-languages="zh_CN" \
 		--with-pdftops=none \
 		--without-perl \
 		--without-python \
