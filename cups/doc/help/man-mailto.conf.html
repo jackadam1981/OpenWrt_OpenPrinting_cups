@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>mailto.conf(5)</title>
+  </head>
+  <body>
+    <h1 id="mailto.conf-5">mailto.conf(5)</h1>
+    <h2 id="mailto.conf-5.name">Name</h2>
+<p>mailto.conf - configuration file for cups email notifier
+</p>
+    <h2 id="mailto.conf-5.description">Description</h2>
+<p>The <strong>mailto.conf</strong> file defines the local mail server and email notification preferences for CUPS.
+</p>
+    <p>Each line in the file can be a configuration directive, a blank line, or a comment.
+Configuration directives typically consist of a name and zero or more values separated by whitespace.
+The configuration directive name and values are case-insensitive.
+Comment lines start with the # character.
+</p>
+    <h3 id="mailto.conf-5.description.directives">Directives</h3>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>Cc </strong><em>cc-address@domain.com</em><br>
+Specifies an additional recipient for all email notifications.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>From </strong><em>from-address@domain.com</em><br>
+Specifies the sender of email notifications.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>Sendmail </strong><em>sendmail command and options</em><br>
+Specifies the sendmail command to use when sending email notifications.
+Only one <em>Sendmail</em> or <em>SMTPServer</em> line may be present in the <strong>mailto.conf</strong> file.
+If multiple lines are present, only the last one is used.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>SMTPServer </strong><em>servername</em><br>
+Specifies a SMTP server to send email notifications to.
+Only one <em>Sendmail</em> or <em>SMTPServer</em> line may be present in the <strong>mailto.conf</strong> file.
+If multiple lines are present, only the last one is used.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>Subject </strong><em>subject-prefix</em><br>
+Specifies a prefix string for the subject line of an email notification.
+</p>
+    <h2 id="mailto.conf-5.see-also">See Also</h2>
+<a href="cupsd.html"><p><strong>cupsd</strong>(8),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="mailto.conf-5.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

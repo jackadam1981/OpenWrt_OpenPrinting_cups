@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>ppdi(1)</title>
+  </head>
+  <body>
+    <h1 id="ppdi-1">ppdi(1)</h1>
+    <h2 id="ppdi-1.name">Name</h2>
+<p>ppdi - import ppd files (deprecated)
+</p>
+    <h2 id="ppdi-1.synopsis">Synopsis</h2>
+<p><strong>ppdi</strong>
+[
+<strong>-I</strong>
+<em>include-directory</em>
+] [
+<strong>-o</strong>
+<em>source-file</em>
+]
+<em>ppd-file</em>
+[ ...
+<em>ppd-file</em>
+]
+</p>
+    <h2 id="ppdi-1.description">Description</h2>
+<p><strong>ppdi</strong> imports one or more PPD files into a PPD compiler source file.
+Multiple languages of the same PPD file are merged into a single printer definition to facilitate accurate changes for all localizations.
+<strong>This program is deprecated and will be removed in a future release of CUPS.</strong>
+</p>
+    <h2 id="ppdi-1.options">Options</h2>
+<p><strong>ppdi</strong> supports the following options:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-I </strong><em>include-directory</em><br>
+Specifies an alternate include directory.
+Multiple <em>-I</em> options can be supplied to add additional directories.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-o </strong><em>source-file</em><br>
+Specifies the PPD source file to update.
+If the source file does not exist, a new source file is created.
+Otherwise the existing file is merged with the new PPD file(s) on the command-line.
+If no source file is specified, the filename <em>ppdi.drv</em> is used.
+</p>
+    <h2 id="ppdi-1.notes">Notes</h2>
+<p>PPD files are deprecated and will no longer be supported in a future feature release of CUPS.
+Printers that do not support IPP can be supported using applications such as
+<a href="ippeveprinter.html"><strong>ippeveprinter</strong>(1).</a>
+
+</p>
+    <h2 id="ppdi-1.see-also">See Also</h2>
+<a href="ppdc.html"><p><strong>ppdc</strong>(1),</a>
+
+<a href="ppdhtml.html"><strong>ppdhtml</strong>(1),</a>
+
+<a href="ppdmerge.html"><strong>ppdmerge</strong>(1),</a>
+
+<a href="ppdpo.html"><strong>ppdpo</strong>(1),</a>
+
+<a href="ppdcfile.html"><strong>ppdcfile</strong>(5),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="ppdi-1.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

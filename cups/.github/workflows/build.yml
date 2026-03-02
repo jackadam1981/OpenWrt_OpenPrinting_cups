@@ -1,0 +1,117 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - master
+      - 2.4.x
+  pull_request:
+    branches:
+      - master
+      - 2.4.x
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout CUPS sources
+      uses: actions/checkout@v6
+    - name: Show Ubuntu version
+      run: cat /etc/os-release | grep PRETTY_NAME | awk -F '=' '{print $2}'
+    - name: Update build environment
+      run: sudo apt-get update --fix-missing -y && sudo apt-get upgrade --fix-missing -y
+    - name: Install prerequisites
+      run: sudo apt-get install -y avahi-daemon libavahi-client-dev libssl-dev libpam-dev libusb-1.0-0-dev zlib1g-dev
+    - name: Configure CUPS
+      env:
+        CC: /usr/bin/gcc
+      run: ./configure --enable-debug --enable-maintainer
+    - name: Build CUPS
+      run: make
+    - name: Test CUPS
+      run: make test
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v6
+      if: ${{ !cancelled() }}
+      with:
+        name: ubuntu-openssl-test-results
+        path: |
+          cups/test.log
+          test/*_log*.txt
+          test/cups-str-*.html
+
+  build-linux-gnutls:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout CUPS sources
+      uses: actions/checkout@v6
+    - name: Show Ubuntu version
+      run: cat /etc/os-release | grep PRETTY_NAME | awk -F '=' '{print $2}'
+    - name: Update build environment
+      run: sudo apt-get update --fix-missing -y
+    - name: Install prerequisites
+      run: sudo apt-get install -y avahi-daemon libavahi-client-dev libgnutls28-dev libpam-dev libusb-1.0-0-dev zlib1g-dev
+    - name: Configure CUPS
+      env:
+        CC: /usr/bin/gcc
+        CXX: /usr/bin/g++
+      run: ./configure --enable-debug --enable-maintainer --with-tls=gnutls
+    - name: Build CUPS
+      run: make
+    - name: Test CUPS
+      run: make test
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v6
+      if: ${{ !cancelled() }}
+      with:
+        name: ubuntu-gnutls-test-results
+        path: |
+          cups/test.log
+          test/*_log*.txt
+          test/cups-str-*.html
+
+  build-macos:
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout CUPS sources
+      uses: actions/checkout@v6
+    - name: Install prerequisites
+      run: brew install cppcheck libjpeg libpng libusb openssl@3
+    - name: Configure CUPS
+      env:
+        LDFLAGS: -L/opt/homebrew/Cellar/openssl@3/3.3.0/lib
+      run: ./configure --enable-debug --enable-maintainer --disable-shared
+    - name: Build CUPS
+      run: make
+    - name: Test CUPS
+      run: make test
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v6
+      if: ${{ !cancelled() }}
+      with:
+        name: macos-test-results
+        path: |
+          cups/test.log
+          test/*_log*.txt
+          test/cups-str-*.html
+
+  build-windows:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout CUPS sources
+      uses: actions/checkout@v6
+    - name: Configure CUPS
+      uses: microsoft/setup-msbuild@v2.0.0
+    - name: Install prerequisites
+      run: cd vcnet; nuget restore cups.sln
+    - name: Build CUPS
+      run: cd vcnet; msbuild cups.sln

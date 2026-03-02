@@ -1,0 +1,163 @@
+.\"
+.\" cups-x509 man page for CUPS.
+.\"
+.\" Copyright © 2025 by OpenPrinting.
+.\"
+.\" Licensed under Apache License v2.0.  See the file "LICENSE" for more
+.\" information.
+.\"
+.TH cups-x509 1 "CUPS" "2025-10-23" "OpenPrinting"
+.SH NAME
+cups-x509 \- manage x.509 certificates and certificate requests
+.SH SYNOPSIS
+.B cups-x509
+.B \-\-help
+.br
+.B cups-x509
+.B \-\-version
+.br
+.B cups-x509
+[
+.B \-\-pin
+] [
+.B \-\-require\-ca
+] [
+.B \-C
+.I COUNTRY
+] [
+.B \-L
+.I LOCALITY
+] [
+.B \-O
+.I ORGANIZATION
+] [
+.B \-R
+.I CSR-FILENAME
+] [
+.B \-S
+.I STATE-PROVINCE
+] [
+.B \-U
+.I ORGANIZATIONAL-UNIT
+] [
+.B \-a
+.I SUBJECT-ALT-NAME
+] [
+.B \-d
+.I DAYS
+] [
+.B \-p
+.I PURPOSE
+] [
+.B \-r
+.I ROOT-NAME
+] [
+.B \-t
+.I TYPE
+] [
+.B \-u
+.I USAGE
+]
+.I SUB-COMMAND
+.I [ARGUMENT(S)]
+.SH DESCRIPTION
+The
+.B cups-x509
+utility manages X.509 certificates and certificate requests, and supports client and server tests.
+.SH OPTIONS
+The following options are recognized by
+.B cups-x509:
+.TP 5
+.B \-\-help
+Show program usage.
+.TP 5
+.B \-\-pin
+Pin the server's X.509 certificate found by the client command.
+.TP 5
+.B \-\-require\-ca
+Require the server's X.509 certificate found by the client command to be signed by a known CA.
+.TP 5
+.B \-\-version
+Show the CUPS version.
+.TP 5
+\fB-C \fICOUNTRY\fR
+Specify the country for new X.509 certificates and certificate requests.
+.TP 5
+\fB-L \fILOCALITY\fR
+Specify the locality (city, town, etc.) for new X.509 certificates and certificate requests.
+.TP 5
+\fB-O \fIORGANIZATION\fR
+Specify the organization name for new X.509 certificates and certificate requests.
+.TP 5
+\fB-R \fICSR-FILENAME\fR
+Specify an X.509 certificate signing request in PEM format to be used when signing a certificate with the
+.B ca
+command.
+.TP 5
+\fB-S \fISTATE-PROVINCE\fR
+Specify the state/province name for new X.509 certificates and certificate requests.
+.TP 5
+\fB-U \fIORGANIZATIONAL-UNIT\fR
+Specify the organizational unit name for new X.509 certificates and certificate requests.
+.TP 5
+\fB-a \fISUBJECT-ALT-NAME\fR
+Specify an alternate name for new X.509 certificates and certificate requests.
+.TP 5
+\fB-d \fIDAYS\fR
+Specify the number of days before a new X.509 certificate will expire.
+.TP 5
+\fB-p \fIPURPOSE\fR
+Specify the purpose of the X.509 certificate or certificate request as a comma-delimited list of purposes.
+The supported purposes are "serverAuth" for TLS server authentication, "clientAuth" for TLS client authentication, "codeSigning" for executable code signing, "emailProtection" for S/MIME encryption and signing, "timeStamping" for secure timestamps, and "OCSPSigning" for Online Certificate Status Protocol services.
+.TP 5
+\fB-r \fIROOT-NAME\fR
+Specify the common name of the X.509 root certificate to use.
+The default root certificate is named "_site_".
+.TP 5
+\fB-t \fITYPE\fR
+Specify the certificate type - "rsa-2048" for 2048-bit RSA, "rsa-3072" for 3072-bit RSA, "rsa-4096" for 4096-bit RSA, "ecdsa-p256" for 256-bit ECDSA, "ecdsa-p384" for 384-bit ECDSA, or "ecdsa-p521" for 521-bit ECDSA.
+.TP 5
+\fB-u \fIUSAGE\fR
+Specify the usage for the certificate as a comma-delimited list of uses.
+The supported uses are "digitalSignature", "nonRepudiation", "keyEncipherment", "dataEncipherment", "keyAgreement", "keyCertSign", "cRLSign", "encipherOnly", and  "decipherOnly".
+The preset "default-ca" specifies those uses required for a Certificate Authority, and the preset "default-tls" specifies those uses required for TLS.
+.SH SUB-COMMANDS
+.SS ca COMMON-NAME
+Sign a certificate request for the specified common name.
+.SS cacert COMMON-NAME
+Create a CA certificate for the specified common name.
+.SS cert COMMON-NAME
+Create a certificate for the specified common name.
+.SS client URI
+Connect to the specified URI and validate the server's certificate.
+.SS csr COMMON-NAME
+Create a certificate signing request for the specified common name.
+.SS install COMMON-NAME FILENAME.crt [FILENAME.key]
+Installs a certificate and optional private key for the specified common name.
+The certificate and private key are PEM-encoded files.
+.SS server COMMON-NAME[:PORT]
+Run a HTTPS test server that echos back the resource path for every GET request.
+If PORT is not specified, uses a port number from 8000 to 8999.
+.SS show COMMON-NAME
+Shows any stored credentials for the specified common name.
+.SH EXAMPLES
+Create a certificate signing request for a 384-bit ECDSA certificate for "server.example.com":
+.nf
+     cups-x509 csr -t ecdsa-p384 server.example.com
+.fi
+Install the certificate you get back from the CA for "server.example.com":
+.nf
+     cups-x509 install server.example.com server.example.com.crt
+.fi
+Run a test server for "server.exmaple.com" on port 8080:
+.nf
+     cups-x509 server SERVER-NAME:8080
+.fi
+Test a HTTPS client connection to "www.example.com" with validation:
+.nf
+     cups-x509 client --require-ca https://www.example.com/
+.fi
+.SH SEE ALSO
+.BR cups (1)
+.SH COPYRIGHT
+Copyright \[co] 2025 by OpenPrinting.

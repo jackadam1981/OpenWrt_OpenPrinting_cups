@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>ppdpo(1)</title>
+  </head>
+  <body>
+    <h1 id="ppdpo-1">ppdpo(1)</h1>
+    <h2 id="ppdpo-1.name">Name</h2>
+<p>ppdpo - ppd message catalog generator (deprecated)
+</p>
+    <h2 id="ppdpo-1.synopsis">Synopsis</h2>
+<p><strong>ppdpo</strong>
+[
+<strong>-D </strong><em>name</em>[<strong>=</strong><em>value</em>]
+] [
+<strong>-I</strong>
+<em>include-directory</em>
+] [
+<strong>-o</strong>
+<em>output-file</em>
+]
+<em>source-file</em>
+</p>
+    <h2 id="ppdpo-1.description">Description</h2>
+<p><strong>ppdpo</strong> extracts UI strings from PPDC source files and updates either a GNU gettext or macOS strings format message catalog source file for translation.
+<strong>This program is deprecated and will be removed in a future release of CUPS.</strong>
+</p>
+    <h2 id="ppdpo-1.options">Options</h2>
+<p><strong>ppdpo</strong> supports the following options:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-D </strong><em>name</em>[<strong>=</strong><em>value</em>]<br>
+Sets the named variable for use in the source file.
+It is equivalent to using the <em>#define</em> directive in the source file.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-I </strong><em>include-directory</em><br>
+Specifies an alternate include directory.
+Multiple <em>-I</em> options can be supplied to add additional directories.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-o </strong><em>output-file</em><br>
+Specifies the output file.
+The supported extensions are <em>.po</em> or <em>.po.gz</em> for GNU gettext format message catalogs and <em>.strings</em> for macOS strings files.
+</p>
+    <h2 id="ppdpo-1.notes">Notes</h2>
+<p>PPD files are deprecated and will no longer be supported in a future feature release of CUPS.
+Printers that do not support IPP can be supported using applications such as
+<a href="ippeveprinter.html"><strong>ippeveprinter</strong>(1).</a>
+
+</p>
+    <h2 id="ppdpo-1.see-also">See Also</h2>
+<a href="ppdc.html"><p><strong>ppdc</strong>(1),</a>
+
+<a href="ppdhtml.html"><strong>ppdhtml</strong>(1),</a>
+
+<a href="ppdi.html"><strong>ppdi</strong>(1),</a>
+
+<a href="ppdmerge.html"><strong>ppdmerge</strong>(1),</a>
+
+<strong>ppdcfile(5),</strong>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="ppdpo-1.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

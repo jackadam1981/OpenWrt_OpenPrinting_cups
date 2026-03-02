@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>snmp.conf(5)</title>
+  </head>
+  <body>
+    <h1 id="snmp.conf-5">snmp.conf(5)</h1>
+    <h2 id="snmp.conf-5.name">Name</h2>
+<p>snmp.conf - snmp configuration file for cups (deprecated)
+</p>
+    <h2 id="snmp.conf-5.description">Description</h2>
+<p>The
+<strong>snmp.conf</strong>
+file configures how the standard CUPS network backends (http, https, ipp, ipps, lpd, snmp, and socket) access printer information using SNMPv1 and is normally located in the <em>/etc/cups</em> directory.
+Each line in the file can be a configuration directive, a blank line, or a comment. Comment lines start with the # character.
+</p>
+    <p>The Community and DebugLevel directives are used by all backends. The remainder apply only to the SNMP backend -
+<a href="cups-snmp.html"><strong>cups-snmp</strong>(8).</a>
+
+</p>
+    <h2 id="snmp.conf-5.directives">Directives</h2>
+<p>The following directives are understood by the CUPS network backends:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>Address @IF(</strong><em>name</em><strong>)</strong><br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>Address @LOCAL</strong><br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>Address </strong><em>address</em><br>
+Sends SNMP broadcast queries (for discovery) to the specified address(es).
+There is no default for the broadcast address.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>Community </strong><em>name</em><br>
+Specifies the community name to use.
+Only a single community name may be specified.
+The default community name is &quot;public&quot;.
+If no name is specified, all SNMP functions are disabled.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>DebugLevel </strong><em>number</em><br>
+Specifies the logging level from 0 (none) to 3 (everything).
+Typically only used for debugging (thus the name).
+The default debug level is 0.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>DeviceURI &quot;</strong><em>regular expression</em><strong>&quot; </strong><em>device-uri </em>[... <em>device-uri</em>]<br>
+Specifies one or more device URIs that should be used for a given make and model string.
+The regular expression is used to match the detected make and model, and the device URI strings must be of the form &quot;scheme://%s[:port]/[path]&quot;, where &quot;%s&quot; represents the detected address or hostname.
+There are no default device URI matching rules.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>HostNameLookups on</strong><br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>HostNameLookups off</strong><br>
+Specifies whether the addresses of printers should be converted to hostnames or left as numeric IP addresses.
+The default is &quot;off&quot;.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>MaxRunTime </strong><em>seconds</em><br>
+Specifies the maximum number of seconds that the SNMP backend will scan the
+network for printers.
+The default is 120 seconds (2 minutes).
+</p>
+    <h2 id="snmp.conf-5.notes">Notes</h2>
+<p>CUPS backends are deprecated and will no longer be supported in a future feature release of CUPS.
+Printers that do not support IPP can be supported using applications such as
+<a href="ippeveprinter.html"><strong>ippeveprinter</strong>(1).</a>
+
+</p>
+    <h2 id="snmp.conf-5.see-also">See Also</h2>
+<a href="cups-snmp.html"><p><strong>cups-snmp</strong>(8),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="snmp.conf-5.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

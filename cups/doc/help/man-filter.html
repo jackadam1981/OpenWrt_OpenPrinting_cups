@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>filter(7)</title>
+  </head>
+  <body>
+    <h1 id="filter-7">filter(7)</h1>
+    <h2 id="filter-7.name">Name</h2>
+<p>filter - cups file conversion filter interface
+</p>
+    <h2 id="filter-7.synopsis">Synopsis</h2>
+<p><strong>filter</strong>
+<em>job</em>
+<em>user</em>
+<em>title</em>
+<em>num-copies</em>
+<em>options</em>
+[
+<em>filename</em>
+]
+</p>
+    <pre>
+<strong>#include &lt;cups/cups.h></strong>
+
+<strong>ssize_t cupsBackChannelRead</strong>(<strong>char *</strong><em>buffer</em>, <strong>size_t </strong><em>bytes</em>,
+                            <strong>double </strong><em>timeout</em>);
+
+<strong>cups_sc_status_t cupsSideChannelDoRequest</strong>(<strong>cups_sc_command_t </strong><em>command</em>,
+                                          <strong>char *</strong><em>data</em>, <strong>int *</strong><em>datalen</em>,
+                                          <strong>double </strong><em>timeout</em>);
+
+<strong>#include &lt;cups/ppd.h></strong>
+
+<strong>const char *cupsGetOption</strong>(<strong>const char *</strong><em>name</em>, <strong>int </strong><em>num_options</em>,
+                 <strong>cups_option_t *</strong><em>options</em>);
+
+<strong>int cupsMarkOptions</strong>(<strong>ppd_file_t *</strong><em>ppd</em>, <strong>int </strong><em>num_options</em>,
+                    <strong>cups_option_t *</strong><em>options</em>);
+
+<strong>int cupsParseOptions</strong>(<strong>const char *</strong><em>arg</em>, <strong>int </strong><em>num_options</em>,
+                     <strong>cups_option_t **</strong><em>options</em>);
+
+<strong>ppd_choice_t *ppdFindMarkedChoice</strong>(<strong>ppd_file_t *</strong><em>ppd</em>, <strong>const char *</strong><em>keyword</em>);
+
+<strong>void ppdMarkDefaults</strong>(<strong>ppd_file_t *</strong><em>ppd</em>);
+
+<strong>ppd_file_t *ppdOpenFile</strong>(<strong>const char *</strong><em>filename</em>);
+</pre>
+    <h2 id="filter-7.description">Description</h2>
+<p>The CUPS filter interface provides a standard method for adding support for new document types or printers to CUPS.
+Each filter is capable of converting from one or more input formats to another format that can either be printed directly or piped into another filter to get it to a printable format.
+</p>
+    <p>Filters <strong>MUST</strong> be capable of reading from a filename on the command-line or from the standard input, copying the standard input to a temporary file as required by the file format.
+All output <strong>MUST</strong> be sent to the standard output.
+Filters <strong>MUST NOT</strong> attempt to communicate directly with the printer, other processes, or other services.
+</p>
+    <p>The command name (<em>argv[0]</em>) is set to the name of the destination printer but is also available in the <strong>PRINTER</strong><em> environment variable.
+</p>
+    <h2 id="filter-7.options">Options</h2>
+<p>Options are passed in argv[5]</em> and are encoded from the corresponding IPP attributes used when the job was submitted. Use the
+<strong>cupsParseOptions</strong>()
+
+function to load the options into a <strong>cups_option_t</strong> array and the
+<strong>cupsGetOption</strong>()
+
+function to get the value of a specific attribute.
+Be careful to look for common aliases of IPP attributes such as &quot;landscape&quot; for the IPP &quot;orientation-requested&quot; attribute.
+</p>
+    <p>Options passed on the command-line typically do not include the default choices the printer's PPD file. Use the
+<strong>ppdMarkDefaults</strong>()
+
+and
+<strong>cupsMarkOptions</strong>()
+
+functions in the CUPS library to apply the options to the PPD defaults and map any IPP attributes to the corresponding PPD options.
+Use
+<strong>ppdFindMarkedChoice</strong>()
+
+to get the user-selected choice for a PPD option. For example, a filter might use the following code to determine the current value of the <strong>Duplex</strong> PPD option:
+</p>
+    <pre>
+    ppd_file_t *ppd = ppdOpenFile(getenv(&quot;PPD&quot;));
+    cups_option_t *options = NULL;
+    int num_options = cupsParseOptions(argv[5], 0, &amp;options);
+
+    ppdMarkDefaults(ppd);
+    cupsMarkOptions(ppd, num_options, options);
+
+    ppd_choice_t *choice = ppdFindMarkedChoice(ppd, &quot;Duplex&quot;);
+</pre>
+    <p>Raster filters should use option choices set through the raster page header, as those reflect the options in effect for a given page.
+Options specified on the command-line determine the default values for the entire job, which can be overridden on a per-page basis.
+</p>
+    <h2 id="filter-7.log-messages">Log Messages</h2>
+<p>Messages sent to the standard error are generally stored in the printer's &quot;printer-state-message&quot; attribute and the current <strong>ErrorLog</strong> file.
+Each line begins with a standard prefix:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>ALERT: </strong><em>message</em><br>
+Sets the &quot;printer-state-message&quot; attribute and adds the specified message to the current <strong>ErrorLog</strong> using the &quot;alert&quot; log level.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>ATTR: </strong><em>attribute=value </em>[ <em>... attribute=value</em>]<br>
+Sets the named job or printer attribute(s). The following job attributes can be set: &quot;job-media-progress&quot;. The following printer attributes can be set:
+&quot;auth-info-required&quot;, &quot;marker-colors&quot;, &quot;marker-high-levels&quot;, &quot;marker-levels&quot;,
+&quot;marker-low-levels&quot;, &quot;marker-message&quot;, &quot;marker-names&quot;, &quot;marker-types&quot;,
+&quot;printer-alert&quot;, and &quot;printer-alert-description&quot;.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CRIT: </strong><em>message</em><br>
+Sets the &quot;printer-state-message&quot; attribute and adds the specified message to the current <strong>ErrorLog</strong> using the &quot;critical&quot; log level.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>DEBUG: </strong><em>message</em><br>
+Adds the specified message to the current <strong>ErrorLog</strong> using the &quot;debug&quot; log level.
+<strong>DEBUG</strong> messages are never stored in the &quot;printer-state-message&quot; attribute.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>DEBUG2: </strong><em>message</em><br>
+<br>
+Adds the specified message to the current <strong>ErrorLog</strong> using the &quot;debug2&quot; log level.
+<strong>DEBUG2</strong> messages are never stored in the &quot;printer-state-message&quot; attribute.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>EMERG: </strong><em>message</em><br>
+Sets the &quot;printer-state-message&quot; attribute and adds the specified message to the current <strong>ErrorLog</strong> using the &quot;emergency&quot; log level.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>ERROR:</strong><em> message</em><br>
+Sets the &quot;printer-state-message&quot; attribute and adds the specified message to the current <strong>ErrorLog</strong> using the &quot;error&quot; log level.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>INFO:</strong><em> message</em><br>
+Sets the &quot;printer-state-message&quot; attribute. If the current <strong>LogLevel</strong> is set to &quot;debug2&quot;, also adds the specified message to the current <strong>ErrorLog</strong> using the &quot;info&quot; log level.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>NOTICE:</strong><em> message</em><br>
+Sets the &quot;printer-state-message&quot; attribute and adds the specified message to the current <strong>ErrorLog</strong> using the &quot;notice&quot; log level.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>PAGE:</strong><em> page-number #-copies</em><br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>PAGE:</strong><em> total #-pages</em><br>
+Adds an entry to the current <strong>PageLog</strong>. The first form adds <em>#-copies</em> to the &quot;job-media-sheets-completed&quot; attribute. The second form sets the &quot;job-media-sheets-completed&quot; attribute to <em>#-pages</em>.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>PPD:</strong><em> Keyword=Value</em> [ <em>... KeywordN=Value</em> ]<br>
+Sets the named keywords in the printer's PPD file. This is typically used to update default option keywords such as <strong>DefaultPageSize</strong> and the various installable options in the PPD file.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>STATE:</strong><em> printer-state-reason </em>[ <em>... printer-state-reason</em> ]<br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>STATE: +</strong><em> printer-state-reason </em>[ <em>... printer-state-reason</em> ]<br>
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>STATE: -</strong><em> printer-state-reason </em>[ <em>... printer-state-reason</em> ]<br>
+Sets, adds, or removes &quot;printer-state-reason&quot; keywords for the current queue. Typically this is used to indicate media, ink, and toner conditions on a printer.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>WARNING:</strong><em> message</em><br>
+Sets the &quot;printer-state-message&quot; attribute and adds the specified message to the current <strong>ErrorLog</strong> using the &quot;warning&quot; log level.
+</p>
+    <h2 id="filter-7.environment-variables">Environment Variables</h2>
+<p>The following environment variables are defined by the CUPS
+server when executing the filter:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CHARSET</strong><br>
+The default text character set, typically &quot;utf-8&quot;.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CLASS</strong><br>
+When a job is submitted to a printer class, contains the name of the destination printer class. Otherwise this environment variable will not be set.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CONTENT_TYPE</strong><br>
+The MIME media type associated with the submitted job file, for example &quot;application/postscript&quot;.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CUPS_CACHEDIR</strong><br>
+The directory where semi-persistent cache files can be found and stored.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CUPS_DATADIR</strong><br>
+The directory where data files can be found.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CUPS_FILETYPE</strong><br>
+The type of file being printed: &quot;job-sheet&quot; for a banner page and &quot;document&quot;
+for a regular print file.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CUPS_MAX_MESSAGE</strong><br>
+The maximum size of a message sent to <em>stderr</em>, including any leading prefix and the trailing newline.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>CUPS_SERVERROOT</strong><br>
+The root directory of the server.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>FINAL_CONTENT_TYPE</strong><br>
+The MIME media type associated with the output destined for the printer, for example &quot;application/vnd.cups-postscript&quot;.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>LANG</strong><br>
+The default language locale (typically C or en).
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>PATH</strong><br>
+The standard execution path for external programs that may be run by the filter.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>PPD</strong><br>
+The full pathname of the PostScript Printer Description (PPD) file for this printer.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>PRINTER</strong><br>
+The name of the printer.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>RIP_CACHE</strong><br>
+The recommended amount of memory to use for Raster Image Processors (RIPs).
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>SOFTWARE</strong><br>
+The name and version number of the server (typically CUPS/<em>major.minor</em>).
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>TZ</strong><br>
+The timezone of the server.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>USER</strong><br>
+The user executing the filter, typically &quot;lp&quot; or &quot;root&quot;; consult the <em>cups-files.conf</em> file for the current setting.
+</p>
+    <h2 id="filter-7.conforming-to">Conforming To</h2>
+<p>While the filter interface is compatible with System V interface scripts, CUPS does not support System V interface scripts.
+</p>
+    <h2 id="filter-7.notes">Notes</h2>
+<p>CUPS printer drivers and backends are deprecated and will no longer be supported in a future feature release of CUPS.
+Printers that do not support IPP can be supported using applications such as
+<a href="ippeveprinter.html"><strong>ippeveprinter</strong>(1).</a>
+
+</p>
+    <p>CUPS filters are not meant to be run directly by the user.
+Aside from the legacy System V interface issues (<em>argv[0]</em> is the printer name), CUPS filters also expect specific environment variables and file descriptors, and typically run in a user session that (on macOS) has additional restrictions that affect how it runs.
+Unless you are a developer and know what you are doing, please do not run filters directly.
+Instead, use the
+<a href="cupsfilter.html"><strong>cupsfilter</strong>(8)</a>
+
+program to use the appropriate filters to do the conversions you need.
+</p>
+    <h2 id="filter-7.see-also">See Also</h2>
+<a href="backend.html"><p><strong>backend</strong>(7),</a>
+
+<a href="cups.html"><strong>cups</strong>(1),</a>
+
+<a href="cups-files.conf.html"><strong>cups-files.conf</strong>(5),</a>
+
+<a href="cupsd.html"><strong>cupsd</strong>(8),</a>
+
+<a href="cupsfilter.html"><strong>cupsfilter</strong>(8),</a>
+
+<br>
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="filter-7.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

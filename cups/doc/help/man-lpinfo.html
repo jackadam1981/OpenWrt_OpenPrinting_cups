@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="creator" content="mantohtml v2.0.2">
+    <title>lpinfo(8)</title>
+  </head>
+  <body>
+    <h1 id="lpinfo-8">lpinfo(8)</h1>
+    <h2 id="lpinfo-8.name">Name</h2>
+<p>lpinfo - show available devices or drivers (deprecated)
+</p>
+    <h2 id="lpinfo-8.synopsis">Synopsis</h2>
+<p><strong>lpinfo</strong>
+[
+<strong>-h </strong><em>server</em>[<strong>:</strong><em>port</em>]
+] [
+<strong>-E</strong>
+] [
+<strong>-l</strong>
+] [
+<strong>--device-id</strong>
+<em>device-id-string</em>
+] [
+<strong>--exclude-schemes</strong>
+<em>scheme-list</em>
+] [
+<strong>--include-schemes</strong>
+<em>scheme-list</em>
+] [
+<strong>--language</strong>
+<em>locale</em>
+] [
+<strong>--make-and-model</strong>
+<em>name</em>
+] [
+<strong>--product</strong>
+<em>name</em>
+]
+<strong>-m</strong>
+<br>
+<strong>lpinfo</strong>
+[
+<strong>-h </strong><em>server</em>[<strong>:</strong><em>port</em>]
+] [
+<strong>-E</strong>
+] [
+<strong>-l</strong>
+] [
+<strong>--exclude-schemes</strong>
+<em>scheme-list</em>
+] [
+<strong>--include-schemes</strong>
+<em>scheme-list</em>
+] [
+<strong>--timeout</strong>
+<em>seconds</em>
+]
+<strong>-v</strong>
+</p>
+    <h2 id="lpinfo-8.description">Description</h2>
+<p><strong>lpinfo</strong> lists the available devices or drivers known to the CUPS server.
+The first form (<em>-m</em>) lists the available drivers, while the second form (<em>-v</em>) lists the available devices.
+</p>
+    <h2 id="lpinfo-8.options">Options</h2>
+<p><strong>lpinfo</strong> accepts the following options:
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-E</strong><br>
+Forces encryption when connecting to the server.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-h </strong><em>server</em>[<strong>:</strong><em>port</em>]<br>
+Selects an alternate server.
+Note: This option must occur before all others.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>-l</strong><br>
+Shows a &quot;long&quot; listing of devices or drivers.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--device-id </strong><em>device-id-string</em><br>
+Specifies the IEEE-1284 device ID to match when listing drivers with the <em>-m</em> option.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--exclude-schemes </strong><em>scheme-list</em><br>
+Specifies a comma-delimited list of device or PPD schemes that should be excluded from the results.
+Static PPD files use the &quot;file&quot; scheme.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--include-schemes </strong><em>scheme-list</em><br>
+Specifies a comma-delimited list of device or PPD schemes that should be included in the results.
+Static PPD files use the &quot;file&quot; scheme.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--language </strong><em>locale</em><br>
+Specifies the language to match when listing drivers with the <em>-m</em> option.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--make-and-model </strong><em>name</em><br>
+Specifies the make and model to match when listing drivers with the <em>-m</em> option.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--product </strong><em>name</em><br>
+Specifies the product to match when listing drivers with the <em>-m</em> option.
+</p>
+    <p style="margin-left: 2.5em; text-indent: -2.5em;"><strong>--timeout </strong><em>seconds</em><br>
+Specifies the timeout when listing devices with the <em>-v</em> option.
+</p>
+    <h2 id="lpinfo-8.conforming-to">Conforming To</h2>
+<p>The <em>lpinfo</em> command is unique to CUPS.
+</p>
+    <h2 id="lpinfo-8.examples">Examples</h2>
+<p>List all devices:
+</p>
+    <pre>
+    lpinfo -v
+
+</pre>
+<p>List all drivers:
+</p>
+    <pre>
+    lpinfo -m
+
+</pre>
+<p>List drivers matching &quot;HP LaserJet&quot;:
+</p>
+    <pre>
+    lpinfo --make-and-model &quot;HP LaserJet&quot; -m
+</pre>
+    <h2 id="lpinfo-8.notes">Notes</h2>
+<p>CUPS printer drivers and backends are deprecated and will no longer be supported in a future feature release of CUPS.
+Printers that do not support IPP can be supported using applications such as
+<a href="ippeveprinter.html"><strong>ippeveprinter</strong>(1).</a>
+
+</p>
+    <h2 id="lpinfo-8.see-also">See Also</h2>
+<a href="lpadmin.html"><p><strong>lpadmin</strong>(8),</a>
+
+CUPS Online Help (<a href="http://localhost:631/help">http://localhost:631/help</a>)
+</p>
+    <h2 id="lpinfo-8.copyright">Copyright</h2>
+<p>Copyright &copy; 2020-2024 by OpenPrinting.
+  </body>
+</html>

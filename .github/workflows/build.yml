@@ -1,5 +1,5 @@
 # OpenWrt CUPS Package Build
-# 使用 OpenWrt SDK 编译适配 OpenWrt 的 CUPS 包
+# 从 downloads.openwrt.org 下载 SDK，产出 .ipk（opkg 格式，适配 24.10.x）
 name: Build CUPS for OpenWrt
 
 on:
@@ -9,29 +9,62 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+env:
+  OPENWRT_VERSION: "24.10.0"
+
 jobs:
   build:
-    name: ${{ matrix.arch }} build
+    name: ${{ matrix.target }}/${{ matrix.subtarget }} build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - x86_64
-          - aarch64_cortex-a72
-          - aarch64_generic
-          - mips_24kc
-          - mipsel_24kc
-          - riscv64_generic
-          - arm_cortex-a7_neon-vfpv4
-          - arm_cortex-a9
-          - arm_cortex-a5_vfpv4
-          - arm_fa526
-          - mips_mips32
-          - powerpc_8548
-          - powerpc_464fp
-          - stm32-stm32mp1
-          - lantiq-xrx200_legacy
+        include:
+          - arch: x86_64
+            target: x86
+            subtarget: "64"
+          - arch: aarch64_cortex-a72
+            target: mvebu
+            subtarget: cortexa72
+          - arch: aarch64_generic
+            target: rockchip
+            subtarget: armv8
+          - arch: aarch64_cortex-a53_filogic
+            target: mediatek
+            subtarget: filogic
+          - arch: mips_24kc
+            target: malta
+            subtarget: be
+          - arch: mipsel_24kc
+            target: ramips
+            subtarget: mt7621
+          - arch: mipsel_24kc_mt7620
+            target: ramips
+            subtarget: mt7620
+          - arch: mipsel_24kc_rt305x
+            target: ramips
+            subtarget: rt305x
+          - arch: mips_24kc_ath79
+            target: ath79
+            subtarget: generic
+          - arch: mips_24kc_ath79_tiny
+            target: ath79
+            subtarget: tiny
+          - arch: arm_cortex-a7_neon-vfpv4
+            target: sunxi
+            subtarget: cortexa7
+          - arch: arm_cortex-a9
+            target: mvebu
+            subtarget: cortexa9
+          - arch: powerpc_8548
+            target: mpc85xx
+            subtarget: p1020
+          - arch: stm32-stm32mp1
+            target: stm32
+            subtarget: stm32mp1
+          - arch: lantiq-xrx200_legacy
+            target: lantiq
+            subtarget: xrx200
 
     steps:
       - name: Checkout repository
@@ -39,26 +72,94 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build CUPS package
-        uses: openwrt/gh-action-sdk@main
+      - name: Download and extract SDK
+        id: sdk
         env:
-          ARCH: ${{ matrix.arch }}
-          FEEDNAME: openprinting_cups
-          PACKAGES: cups
-          V: s
-          BUILD_LOG: "1"
+          TARGET: ${{ matrix.target }}
+          SUBTARGET: ${{ matrix.subtarget }}
+        run: |
+          BASE_URL="https://downloads.openwrt.org/releases/${OPENWRT_VERSION}/targets"
+          TARGET_PATH="${TARGET}/${SUBTARGET}"
+          INDEX=$(curl -sL "${BASE_URL}/${TARGET_PATH}/")
+          SDK_FILE=$(echo "$INDEX" | grep -oE "openwrt-sdk-${OPENWRT_VERSION}-${TARGET}-${SUBTARGET}_[^\"]+\.tar\.zst" | head -1)
+          [ -n "$SDK_FILE" ] || { echo "ERROR: Could not find SDK for ${TARGET_PATH}"; exit 1; }
+          curl -sL -o sdk.tar.zst "${BASE_URL}/${TARGET_PATH}/${SDK_FILE}"
+          tar -I zstd -xf sdk.tar.zst
+          rm sdk.tar.zst
+          SDK_DIR=$(find . -maxdepth 1 -type d -name "openwrt-sdk-*" | head -1)
+          echo "dir=${SDK_DIR}" >> $GITHUB_OUTPUT
+          echo "SDK_DIR=${SDK_DIR}" >> $GITHUB_ENV
+
+      - name: Configure feed
+        env:
+          FEED_DIR: ${{ github.workspace }}
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          [ -f feeds.conf ] || cp feeds.conf.default feeds.conf
+          echo "src-link openprinting_cups $FEED_DIR" >> feeds.conf
+          ./scripts/feeds update -a
+          ./scripts/feeds install -p openprinting_cups -f cups
+          make defconfig 2>/dev/null || true
+
+      - name: Build CUPS packages
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          make package/cups/compile -j$(nproc) V=s
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: cups-${{ matrix.arch }}-packages
-          path: bin/**/cups*
-          if-no-files-found: ignore
+          path: openwrt-sdk-*/bin/**/cups*.ipk
+          if-no-files-found: warn
 
       - name: Upload build logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cups-${{ matrix.arch }}-logs
-          path: logs/
+          path: openwrt-sdk-*/logs/
           if-no-files-found: ignore
+
+  release:
+    name: Publish CUPS OpenWrt packages
+    needs: build
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      contains(github.event.head_commit.message, 'chore: bump CUPS to')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read PKG_VERSION from Makefile
+        id: version
+        run: |
+          MAKEFILE="packages/print/cups/Makefile"
+          PKG_VERSION=$(grep -E '^PKG_VERSION:=' "$MAKEFILE" | cut -d= -f2)
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+          echo "pkg_version=${PKG_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Download built packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cups-*-packages
+          merge-multiple: true
+          path: dist
+
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          # 单个 Release，表示「某个 CUPS 版本在某个 OpenWrt 版本上的全部矩阵构建产物」
+          tag_name: v${{ steps.version.outputs.pkg_version }}-openwrt-${{ env.OPENWRT_VERSION }}
+          name: CUPS ${{ steps.version.outputs.pkg_version }} packages for OpenWrt ${{ env.OPENWRT_VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/**/*.ipk

@@ -23,21 +23,64 @@ PKG_BUILD_DEPENDS:=bison/host flex/host
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/cups
+define Build/Prepare
+	$(call Build/Prepare/Default,)
+	$(INSTALL_DIR) $(PKG_BUILD_DIR)/doc/zh_CN
+	$(INSTALL_DIR) $(PKG_BUILD_DIR)/templates/zh_CN
+	$(CP) $(CURDIR)/files/zh_CN/doc/* $(PKG_BUILD_DIR)/doc/zh_CN/
+	$(CP) $(CURDIR)/files/zh_CN/templates/* $(PKG_BUILD_DIR)/templates/zh_CN/
+endef
+
+define Package/cups/Default
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=Printing
-  TITLE:=Common Unix Printing System (CUPS)
   URL:=https://openprinting.org/cups/
+endef
+
+define Package/cups-mini
+$(call Package/cups/Default)
+  TITLE:=CUPS - Print Server (mini)
   DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
 endef
 
-define Package/cups/description
- CUPS (Common Unix Printing System) 是 OpenPrinting 主导的跨平台打印服务框架。
- 它提供 IPP/IPP Everywhere 兼容的打印服务器、调度与驱动管理能力。
+define Package/cups-mini/description
+ CUPS 打印服务器核心（mini），含 cupsd、库、backend、filter、cgi-bin。
+ 支持 Web 管理（http://IP:631）。适合资源有限的设备。
+endef
+
+define Package/cups-bsd
+$(call Package/cups/Default)
+  TITLE:=CUPS - mini + BSD Commands
+  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
+endef
+
+define Package/cups-bsd/description
+ 含 mini 全部内容 + BSD 风格命令（lpr、lpq、lprm、lpc）。可独立安装。
+endef
+
+define Package/cups-client
+$(call Package/cups/Default)
+  TITLE:=CUPS - mini + System V Client Commands
+  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
+endef
+
+define Package/cups-client/description
+ 含 mini 全部内容 + System V 风格客户端（lp、cancel、lpadmin 等）。可独立安装。
+endef
+
+define Package/cups-full
+$(call Package/cups/Default)
+  TITLE:=CUPS - Full (mini + bsd + client)
+  DEPENDS:=+zlib +libjpeg-turbo +libpng +libopenssl +libusb-1.0 +libstdcpp
+endef
+
+define Package/cups-full/description
+ 全功能包：自包含 mini + bsd + client 全部内容，可独立安装，无交叉依赖。
 endef
 
 CONFIGURE_ARGS += \
+    --libdir=/usr/lib \
     --disable-dbus \
     --disable-launchd \
     --disable-systemd \
@@ -53,10 +96,13 @@ CONFIGURE_VARS += \
     ac_cv_cups_use_networking=yes
 
 TARGET_CFLAGS += -fPIC
+
 TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 
 define Build/Configure
 	$(call Build/Configure/Default, \
+		--enable-shared \
+		--with-languages="ja zh_CN" \
 		--with-pdftops=none \
 		--without-perl \
 		--without-python \
@@ -82,16 +128,20 @@ define Build/Compile
 		all install
 endef
 
-define Package/cups/install
+define Package/cups-mini/install
 	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsctl,cupsd,cupsfilter,cupsaccept,lpadmin,lpinfo,lpmove,lpc} $(1)/usr/sbin/
-	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
-
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat,lpq,lpr,lprm} $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsctl,cupsd,cupsfilter} $(1)/usr/sbin/
 
 	$(INSTALL_DIR) $(1)/etc/cups
 	$(CP) $(PKG_INSTALL_DIR)/etc/cups/* $(1)/etc/cups/
+	# Listen on all interfaces, allow LAN access for web UI
+	sed -i 's/Listen localhost:631/Listen *:631/' $(1)/etc/cups/cupsd.conf
+	# Remove IdleExitTimeout if unsupported by this build (avoids "Unknown directive" error)
+	sed -i '/^IdleExitTimeout/d' $(1)/etc/cups/cupsd.conf
+	# Add Allow from private IP ranges (Location uses Order allow,deny; Policy uses Order deny,allow)
+	sed -i '/  Order allow,deny/a\  Allow from 192.168.0.0\/16' $(1)/etc/cups/cupsd.conf
+	sed -i '/  Order allow,deny/a\  Allow from 172.16.0.0\/12' $(1)/etc/cups/cupsd.conf
+	sed -i '/  Order allow,deny/a\  Allow from 10.0.0.0\/8' $(1)/etc/cups/cupsd.conf
 
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcups.so* $(1)/usr/lib/
@@ -103,6 +153,9 @@ define Package/cups/install
 	$(INSTALL_DIR) $(1)/usr/share/cups
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/cups/* $(1)/usr/share/cups/
 
+	$(INSTALL_DIR) $(1)/usr/share/locale
+	-if [ -d $(PKG_INSTALL_DIR)/usr/share/locale ]; then $(CP) -r $(PKG_INSTALL_DIR)/usr/share/locale/* $(1)/usr/share/locale/; fi
+
 	for d in cache certs logs spool; do \
 		$(INSTALL_DIR) $(1)/var/run/cups/$$d; \
 	done
@@ -111,10 +164,60 @@ define Package/cups/install
 	$(INSTALL_BIN) ./files/cupsd.init $(1)/etc/init.d/cupsd
 endef
 
-define Package/cups/conffiles
+define Package/cups-mini/conffiles
 /etc/cups/cups-files.conf
 /etc/cups/cupsd.conf
 endef
 
-$(eval $(call BuildPackage,cups))
+define Package/cups-bsd/install
+	$(call Package/cups-mini/install,$(1))
+
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{lpr,lpq,lprm} $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/lpc $(1)/usr/sbin/
+endef
+
+define Package/cups-bsd/conffiles
+/etc/cups/cups-files.conf
+/etc/cups/cupsd.conf
+endef
+define Package/cups-client/install
+	$(call Package/cups-mini/install,$(1))
+
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat} $(1)/usr/bin/
+
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,lpadmin,lpinfo,lpmove} $(1)/usr/sbin/
+	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
+endef
+
+define Package/cups-client/conffiles
+/etc/cups/cups-files.conf
+/etc/cups/cupsd.conf
+endef
+define Package/cups-full/install
+	$(call Package/cups-mini/install,$(1))
+	# + bsd
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{lpr,lpq,lprm} $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/lpc $(1)/usr/sbin/
+	# + client
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/{cancel,cupstestppd,lp,lpoptions,lpstat} $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/{cupsaccept,lpadmin,lpinfo,lpmove} $(1)/usr/sbin/
+	(cd $(1)/usr/sbin && ln -sf cupsaccept cupsenable && ln -sf cupsaccept cupsdisable && ln -sf cupsaccept cupsreject)
+endef
+
+define Package/cups-full/conffiles
+/etc/cups/cups-files.conf
+/etc/cups/cupsd.conf
+endef
+$(eval $(call BuildPackage,cups-mini))
+$(eval $(call BuildPackage,cups-bsd))
+$(eval $(call BuildPackage,cups-client))
+$(eval $(call BuildPackage,cups-full))
 
