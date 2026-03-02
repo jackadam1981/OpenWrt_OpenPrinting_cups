@@ -120,3 +120,46 @@ jobs:
           name: cups-${{ matrix.arch }}-logs
           path: openwrt-sdk-*/logs/
           if-no-files-found: ignore
+
+  release:
+    name: Publish CUPS OpenWrt packages
+    needs: build
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      contains(github.event.head_commit.message, 'chore: bump CUPS to')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read PKG_VERSION from Makefile
+        id: version
+        run: |
+          MAKEFILE="packages/print/cups/Makefile"
+          PKG_VERSION=$(grep -E '^PKG_VERSION:=' "$MAKEFILE" | cut -d= -f2)
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+          echo "pkg_version=${PKG_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Download built packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cups-*-packages
+          merge-multiple: true
+          path: dist
+
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          # 单个 Release，表示「某个 CUPS 版本在某个 OpenWrt 版本上的全部矩阵构建产物」
+          tag_name: v${{ steps.version.outputs.pkg_version }}-openwrt-${{ env.OPENWRT_VERSION }}
+          name: CUPS ${{ steps.version.outputs.pkg_version }} packages for OpenWrt ${{ env.OPENWRT_VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/**/*.ipk
