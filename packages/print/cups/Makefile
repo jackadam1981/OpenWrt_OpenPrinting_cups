@@ -3,10 +3,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cups
-PKG_VERSION:=2.4.18
+PKG_VERSION:=2.4.19
 PKG_RELEASE:=1
 
-PKG_HASH:=8fe23bf4905f8889f4bd5ebf375e81916e84754bfc59eccc88cfd7b1e97a741b
+PKG_HASH:=820984b12a67f98705785aae2dd1347fe0ac097828001d4583ff64574aed6389
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-source.tar.gz
 PKG_SOURCE_URL:=https://github.com/OpenPrinting/cups/releases/download/v$(PKG_VERSION)/
