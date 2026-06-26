@@ -46,6 +46,9 @@ define Build/Prepare
 ifneq ($(CUPS_USE_OVERLAY),)
 	$(CP) $(CURDIR)/files/source/* $(PKG_BUILD_DIR)/
 endif
+ifneq ($(CUPS_SNAPSHOT_COMMIT),)
+	$(CP) $(CURDIR)/files/snapshot/dnssd.c $(PKG_BUILD_DIR)/cups/dnssd.c
+endif
 endef
 
 define Package/cups/Default
