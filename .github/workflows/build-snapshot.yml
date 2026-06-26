@@ -24,11 +24,9 @@ jobs:
     outputs:
       pkg_version: ${{ steps.meta.outputs.pkg_version }}
       commit_short: ${{ steps.meta.outputs.commit_short }}
+      commit_full: ${{ steps.meta.outputs.commit_full }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Write snapshot.mk
+      - name: Resolve snapshot metadata
         id: meta
         env:
           COMMIT: ${{ inputs.cups_commit }}
@@ -38,21 +36,11 @@ jobs:
           SHORT="${COMMIT:0:7}"
           DATE=$(date -u +%Y%m%d)
           PKG_VERSION="2.5.0~snapshot.${DATE}.${SHORT}"
-          printf 'CUPS_SNAPSHOT_COMMIT:=%s\nCUPS_SNAPSHOT_VERSION:=%s\n' \
-            "${COMMIT}" "${PKG_VERSION}" > packages/print/cups/snapshot.mk
           echo "Snapshot commit: ${COMMIT}"
           echo "PKG_VERSION: ${PKG_VERSION}"
-          cat packages/print/cups/snapshot.mk
           echo "pkg_version=${PKG_VERSION}" >> $GITHUB_OUTPUT
           echo "commit_short=${SHORT}" >> $GITHUB_OUTPUT
-
-      - name: Upload snapshot feed
-        uses: actions/upload-artifact@v4
-        with:
-          name: snapshot-feed
-          path: |
-            packages/print/cups/snapshot.mk
-            packages/print/cups/Makefile
+          echo "commit_full=${COMMIT}" >> $GITHUB_OUTPUT
 
   build:
     name: ${{ matrix.target }}/${{ matrix.subtarget }} snapshot
@@ -112,16 +100,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download snapshot feed files
-        uses: actions/download-artifact@v4
-        with:
-          name: snapshot-feed
-          path: feed-patch
-
-      - name: Apply snapshot.mk
+      - name: Write snapshot.mk
         run: |
-          cp feed-patch/packages/print/cups/snapshot.mk packages/print/cups/snapshot.mk
-          cp feed-patch/packages/print/cups/Makefile packages/print/cups/Makefile
+          printf 'CUPS_SNAPSHOT_COMMIT:=%s\nCUPS_SNAPSHOT_VERSION:=%s\n' \
+            "${{ needs.prepare.outputs.commit_full }}" \
+            "${{ needs.prepare.outputs.pkg_version }}" \
+            > packages/print/cups/snapshot.mk
+          cat packages/print/cups/snapshot.mk
 
       - name: Download and extract SDK
         id: sdk
