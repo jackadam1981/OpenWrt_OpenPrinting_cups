@@ -16,6 +16,7 @@ PKG_MIRROR_HASH:=skip
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 CUPS_WITH_LANGUAGES:=zh_CN zh_TW
 CUPS_USE_OVERLAY:=
+CUPS_DNSSD_CONFIGURE:=--with-dnssd=no
 else
 PKG_VERSION:=2.4.19
 PKG_RELEASE:=1
@@ -26,6 +27,7 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 CUPS_MM:=$(firstword $(subst ., ,$(PKG_VERSION))).$(word 2,$(subst ., ,$(PKG_VERSION)))
 CUPS_WITH_LANGUAGES:=$(if $(filter 2.4,$(CUPS_MM)),zh_CN,zh_CN zh_TW)
 CUPS_USE_OVERLAY:=$(filter 2.4,$(CUPS_MM))
+CUPS_DNSSD_CONFIGURE:=--disable-dnssd --disable-avahi
 endif
 
 PKG_LICENSE:=Apache-2.0
@@ -124,8 +126,7 @@ define Build/Configure
 		--without-php \
 		--enable-libusb \
 		--disable-acl \
-		--disable-dnssd \
-		--disable-avahi \
+		$(CUPS_DNSSD_CONFIGURE) \
 		--disable-ldap \
 		--disable-pam \
 		--disable-slp \
