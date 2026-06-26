@@ -23,10 +23,16 @@ PKG_BUILD_DEPENDS:=bison/host flex/host
 
 include $(INCLUDE_DIR)/package.mk
 
+# 2.4.x 需 overlay 补中文 Web UI；2.5+ 上游已合并 #1535（zh_CN/zh_TW）
+CUPS_MM:=$(firstword $(subst ., ,$(PKG_VERSION))).$(word 2,$(subst ., ,$(PKG_VERSION)))
+CUPS_WITH_LANGUAGES:=$(if $(filter 2.4,$(CUPS_MM)),zh_CN,zh_CN zh_TW)
+CUPS_USE_OVERLAY:=$(filter 2.4,$(CUPS_MM))
+
 define Build/Prepare
 	$(call Build/Prepare/Default,)
-	# 覆盖上游源码树，按 cups 源码结构放置本地化文件
+ifneq ($(CUPS_USE_OVERLAY),)
 	$(CP) $(CURDIR)/files/source/* $(PKG_BUILD_DIR)/
+endif
 endef
 
 define Package/cups/Default
@@ -100,7 +106,7 @@ TARGET_LDFLAGS += -Wl,--as-needed -Wl,-rpath-link=$(STAGING_DIR)/usr/lib
 define Build/Configure
 	$(call Build/Configure/Default, \
 		--enable-shared \
-		--with-languages="zh_CN" \
+		--with-languages="$(CUPS_WITH_LANGUAGES)" \
 		--with-pdftops=none \
 		--without-perl \
 		--without-python \

@@ -8,6 +8,12 @@ on:
   pull_request:
     branches: [main, master]
   workflow_dispatch:
+    inputs:
+      create_release:
+        description: Publish GitHub Release after a successful build
+        required: false
+        default: false
+        type: boolean
 
 env:
   OPENWRT_VERSION: "24.10.0"
@@ -126,9 +132,15 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: >
-      github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
-      contains(github.event.head_commit.message, 'chore: bump CUPS to')
+      (
+        github.event_name == 'push' &&
+        (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+        contains(github.event.head_commit.message, 'chore: bump CUPS to')
+      ) ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        inputs.create_release
+      )
     permissions:
       contents: write
 

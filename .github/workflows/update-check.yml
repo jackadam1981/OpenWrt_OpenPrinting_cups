@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
 
     steps:
       - name: Checkout repository
@@ -66,3 +67,17 @@ jobs:
           - PKG_VERSION: ${{ steps.update.outputs.old_version }} → ${{ steps.update.outputs.version }}
           - PKG_HASH: 已更新为对应 source tarball 的 SHA256"
           git push origin HEAD:master
+
+      - name: Trigger build and release
+        if: steps.update.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GITHUB_TOKEN 推送不会触发 push workflow；改用手动 dispatch build
+          curl -fsSL -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/dispatches" \
+            -d '{"ref":"master","inputs":{"create_release":"true"}}'
+          echo "Triggered Build CUPS for OpenWrt (create_release=true)"
