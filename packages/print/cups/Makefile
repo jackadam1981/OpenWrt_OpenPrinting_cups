@@ -3,14 +3,30 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=cups
+
+-include $(CURDIR)/snapshot.mk
+
+ifneq ($(CUPS_SNAPSHOT_COMMIT),)
+PKG_VERSION:=$(if $(CUPS_SNAPSHOT_VERSION),$(CUPS_SNAPSHOT_VERSION),2.5.0~snapshot)
+PKG_RELEASE:=1
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=https://github.com/OpenPrinting/cups.git
+PKG_SOURCE_VERSION:=$(CUPS_SNAPSHOT_COMMIT)
+PKG_MIRROR_HASH:=skip
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+CUPS_WITH_LANGUAGES:=zh_CN zh_TW
+CUPS_USE_OVERLAY:=
+else
 PKG_VERSION:=2.4.19
 PKG_RELEASE:=1
-
 PKG_HASH:=820984b12a67f98705785aae2dd1347fe0ac097828001d4583ff64574aed6389
-
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-source.tar.gz
 PKG_SOURCE_URL:=https://github.com/OpenPrinting/cups/releases/download/v$(PKG_VERSION)/
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+CUPS_MM:=$(firstword $(subst ., ,$(PKG_VERSION))).$(word 2,$(subst ., ,$(PKG_VERSION)))
+CUPS_WITH_LANGUAGES:=$(if $(filter 2.4,$(CUPS_MM)),zh_CN,zh_CN zh_TW)
+CUPS_USE_OVERLAY:=$(filter 2.4,$(CUPS_MM))
+endif
 
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE.txt
@@ -22,11 +38,6 @@ PKG_INSTALL:=1
 PKG_BUILD_DEPENDS:=bison/host flex/host
 
 include $(INCLUDE_DIR)/package.mk
-
-# 2.4.x 需 overlay 补中文 Web UI；2.5+ 上游已合并 #1535（zh_CN/zh_TW）
-CUPS_MM:=$(firstword $(subst ., ,$(PKG_VERSION))).$(word 2,$(subst ., ,$(PKG_VERSION)))
-CUPS_WITH_LANGUAGES:=$(if $(filter 2.4,$(CUPS_MM)),zh_CN,zh_CN zh_TW)
-CUPS_USE_OVERLAY:=$(filter 2.4,$(CUPS_MM))
 
 define Build/Prepare
 	$(call Build/Prepare/Default,)

@@ -1,0 +1,204 @@
+# 手动构建 OpenPrinting/cups master 快照（pin commit，无 overlay）
+name: Build CUPS Snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      cups_commit:
+        description: OpenPrinting/cups commit SHA（含 #1535 的 master 快照）
+        required: false
+        default: a18775b193e9a4a24e22e7ceead05d2e2cd16b51
+      create_release:
+        description: Publish GitHub Release (prerelease) after successful build
+        required: false
+        default: true
+        type: boolean
+
+env:
+  OPENWRT_VERSION: "24.10.0"
+
+jobs:
+  prepare:
+    name: Configure snapshot
+    runs-on: ubuntu-latest
+    outputs:
+      pkg_version: ${{ steps.meta.outputs.pkg_version }}
+      commit_short: ${{ steps.meta.outputs.commit_short }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write snapshot.mk
+        id: meta
+        env:
+          COMMIT: ${{ inputs.cups_commit }}
+        run: |
+          COMMIT="${COMMIT#v}"
+          [ "${#COMMIT}" -ge 7 ] || { echo "Invalid commit SHA: $COMMIT"; exit 1; }
+          SHORT="${COMMIT:0:7}"
+          DATE=$(date -u +%Y%m%d)
+          PKG_VERSION="2.5.0~snapshot.${DATE}.${SHORT}"
+          printf 'CUPS_SNAPSHOT_COMMIT:=%s\nCUPS_SNAPSHOT_VERSION:=%s\n' \
+            "${COMMIT}" "${PKG_VERSION}" > packages/print/cups/snapshot.mk
+          echo "Snapshot commit: ${COMMIT}"
+          echo "PKG_VERSION: ${PKG_VERSION}"
+          cat packages/print/cups/snapshot.mk
+          echo "pkg_version=${PKG_VERSION}" >> $GITHUB_OUTPUT
+          echo "commit_short=${SHORT}" >> $GITHUB_OUTPUT
+
+      - name: Upload snapshot feed
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-feed
+          path: |
+            packages/print/cups/snapshot.mk
+            packages/print/cups/Makefile
+
+  build:
+    name: ${{ matrix.target }}/${{ matrix.subtarget }} snapshot
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            target: x86
+            subtarget: "64"
+          - arch: aarch64_cortex-a72
+            target: mvebu
+            subtarget: cortexa72
+          - arch: aarch64_generic
+            target: rockchip
+            subtarget: armv8
+          - arch: aarch64_cortex-a53_filogic
+            target: mediatek
+            subtarget: filogic
+          - arch: mips_24kc
+            target: malta
+            subtarget: be
+          - arch: mipsel_24kc
+            target: ramips
+            subtarget: mt7621
+          - arch: mipsel_24kc_mt7620
+            target: ramips
+            subtarget: mt7620
+          - arch: mipsel_24kc_rt305x
+            target: ramips
+            subtarget: rt305x
+          - arch: mips_24kc_ath79
+            target: ath79
+            subtarget: generic
+          - arch: mips_24kc_ath79_tiny
+            target: ath79
+            subtarget: tiny
+          - arch: arm_cortex-a7_neon-vfpv4
+            target: sunxi
+            subtarget: cortexa7
+          - arch: arm_cortex-a9
+            target: mvebu
+            subtarget: cortexa9
+          - arch: powerpc_8548
+            target: mpc85xx
+            subtarget: p1020
+          - arch: stm32-stm32mp1
+            target: stm32
+            subtarget: stm32mp1
+          - arch: lantiq-xrx200_legacy
+            target: lantiq
+            subtarget: xrx200
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download snapshot feed files
+        uses: actions/download-artifact@v4
+        with:
+          name: snapshot-feed
+          path: feed-patch
+
+      - name: Apply snapshot.mk
+        run: |
+          cp feed-patch/packages/print/cups/snapshot.mk packages/print/cups/snapshot.mk
+          cp feed-patch/packages/print/cups/Makefile packages/print/cups/Makefile
+
+      - name: Download and extract SDK
+        id: sdk
+        env:
+          TARGET: ${{ matrix.target }}
+          SUBTARGET: ${{ matrix.subtarget }}
+        run: |
+          BASE_URL="https://downloads.openwrt.org/releases/${OPENWRT_VERSION}/targets"
+          TARGET_PATH="${TARGET}/${SUBTARGET}"
+          INDEX=$(curl -sL "${BASE_URL}/${TARGET_PATH}/")
+          SDK_FILE=$(echo "$INDEX" | grep -oE "openwrt-sdk-${OPENWRT_VERSION}-${TARGET}-${SUBTARGET}_[^\"]+\.tar\.zst" | head -1)
+          [ -n "$SDK_FILE" ] || { echo "ERROR: Could not find SDK for ${TARGET_PATH}"; exit 1; }
+          curl -sL -o sdk.tar.zst "${BASE_URL}/${TARGET_PATH}/${SDK_FILE}"
+          tar -I zstd -xf sdk.tar.zst
+          rm sdk.tar.zst
+          SDK_DIR=$(find . -maxdepth 1 -type d -name "openwrt-sdk-*" | head -1)
+          echo "dir=${SDK_DIR}" >> $GITHUB_OUTPUT
+
+      - name: Configure feed
+        env:
+          FEED_DIR: ${{ github.workspace }}
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          [ -f feeds.conf ] || cp feeds.conf.default feeds.conf
+          echo "src-link openprinting_cups $FEED_DIR" >> feeds.conf
+          ./scripts/feeds update -a
+          ./scripts/feeds install -p openprinting_cups -f cups
+          make defconfig 2>/dev/null || true
+
+      - name: Build CUPS snapshot packages
+        run: |
+          cd ${{ steps.sdk.outputs.dir }}
+          make package/cups/compile -j$(nproc) V=s
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: cups-snapshot-${{ matrix.arch }}-packages
+          path: openwrt-sdk-*/bin/**/cups*.ipk
+          if-no-files-found: warn
+
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cups-snapshot-${{ matrix.arch }}-logs
+          path: openwrt-sdk-*/logs/
+          if-no-files-found: ignore
+
+  release:
+    name: Publish snapshot Release
+    needs: [prepare, build]
+    if: inputs.create_release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download built packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cups-snapshot-*-packages
+          merge-multiple: true
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: snapshot-${{ needs.prepare.outputs.commit_short }}-openwrt-${{ env.OPENWRT_VERSION }}
+          name: CUPS snapshot ${{ needs.prepare.outputs.commit_short }} (OpenWrt ${{ env.OPENWRT_VERSION }})
+          body: |
+            OpenPrinting/cups master 快照构建。
+
+            - **Commit:** `${{ inputs.cups_commit }}`
+            - **PKG_VERSION:** `${{ needs.prepare.outputs.pkg_version }}`
+            - **说明:** 2.5 开发线，含上游 #1535 中文 Web UI，无 overlay；预发布，仅供测试。
+          draft: false
+          prerelease: true
+          files: |
+            dist/**/*.ipk
