@@ -14,15 +14,13 @@ on:
         default: true
         type: boolean
 
-env:
-  OPENWRT_VERSION: "24.10.0"
-
 jobs:
   prepare:
     name: Configure snapshot
     runs-on: ubuntu-latest
     outputs:
       pkg_version: ${{ steps.meta.outputs.pkg_version }}
+      version_detail: ${{ steps.meta.outputs.version_detail }}
       commit_short: ${{ steps.meta.outputs.commit_short }}
       commit_full: ${{ steps.meta.outputs.commit_full }}
     steps:
@@ -35,10 +33,13 @@ jobs:
           [ "${#COMMIT}" -ge 7 ] || { echo "Invalid commit SHA: $COMMIT"; exit 1; }
           SHORT="${COMMIT:0:7}"
           DATE=$(date -u +%Y%m%d)
-          PKG_VERSION="2.5.0~snapshot.${DATE}.${SHORT}"
+          PKG_VERSION="2.5.0"
+          VERSION_DETAIL="2.5.0~snapshot.${DATE}.${SHORT}"
           echo "Snapshot commit: ${COMMIT}"
-          echo "PKG_VERSION: ${PKG_VERSION}"
+          echo "PKG_VERSION (ipk): ${PKG_VERSION}"
+          echo "VERSION_DETAIL: ${VERSION_DETAIL}"
           echo "pkg_version=${PKG_VERSION}" >> $GITHUB_OUTPUT
+          echo "version_detail=${VERSION_DETAIL}" >> $GITHUB_OUTPUT
           echo "commit_short=${SHORT}" >> $GITHUB_OUTPUT
           echo "commit_full=${COMMIT}" >> $GITHUB_OUTPUT
 
@@ -99,6 +100,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Read OpenWrt version
+        run: echo "OPENWRT_VERSION=$(tr -d ' \n' < .github/openwrt-version)" >> $GITHUB_ENV
 
       - name: Write snapshot.mk
         run: |
@@ -165,6 +169,13 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read OpenWrt version
+        id: openwrt
+        run: echo "version=$(tr -d ' \n' < .github/openwrt-version)" >> $GITHUB_OUTPUT
+
       - name: Download built packages
         uses: actions/download-artifact@v4
         with:
@@ -172,16 +183,30 @@ jobs:
           merge-multiple: true
           path: dist
 
+      - name: Flatten snapshot package filenames
+        run: |
+          # cups-bsd_2.5.0~snapshot.20260626.a18775b-r1_aarch64.ipk → cups-bsd_2.5.0_aarch64.ipk
+          find dist -name 'cups*.ipk' -print0 | while IFS= read -r -d '' f; do
+            b=$(basename "$f")
+            new=$(echo "$b" | sed -E 's/(cups-[a-z]+_)2\.5\.0(~snapshot\.[0-9]+\.[a-f0-9]+)?-r[0-9]+/\12.5.0/')
+            if [ "$b" != "$new" ]; then
+              mv "$f" "$(dirname "$f")/$new"
+            fi
+          done
+          echo "Release assets:"
+          find dist -name 'cups*.ipk' | sort | head -10
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: snapshot-${{ needs.prepare.outputs.commit_short }}-openwrt-${{ env.OPENWRT_VERSION }}
-          name: CUPS snapshot ${{ needs.prepare.outputs.commit_short }} (OpenWrt ${{ env.OPENWRT_VERSION }})
+          tag_name: snapshot-${{ needs.prepare.outputs.commit_short }}-openwrt-${{ steps.openwrt.outputs.version }}
+          name: CUPS snapshot ${{ needs.prepare.outputs.commit_short }} (OpenWrt ${{ steps.openwrt.outputs.version }})
           body: |
             OpenPrinting/cups master 快照构建。
 
             - **Commit:** `${{ inputs.cups_commit }}`
-            - **PKG_VERSION:** `${{ needs.prepare.outputs.pkg_version }}`
+            - **Build ID:** `${{ needs.prepare.outputs.version_detail }}`
+            - **Release 文件名:** `cups-*_2.5.0_<arch>.ipk`
             - **说明:** 2.5 开发线，含上游 #1535 中文 Web UI，无 overlay；预发布，仅供测试。
           draft: false
           prerelease: true

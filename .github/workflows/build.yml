@@ -15,9 +15,6 @@ on:
         default: false
         type: boolean
 
-env:
-  OPENWRT_VERSION: "24.10.0"
-
 jobs:
   build:
     name: ${{ matrix.target }}/${{ matrix.subtarget }} build
@@ -78,6 +75,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Read OpenWrt version
+        run: echo "OPENWRT_VERSION=$(tr -d ' \n' < .github/openwrt-version)" >> $GITHUB_ENV
+
       - name: Download and extract SDK
         id: sdk
         env:
@@ -135,7 +135,7 @@ jobs:
       (
         github.event_name == 'push' &&
         (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
-        contains(github.event.head_commit.message, 'chore: bump CUPS to')
+        contains(github.event.head_commit.message, 'chore: bump')
       ) ||
       (
         github.event_name == 'workflow_dispatch' &&
@@ -150,11 +150,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Read OpenWrt version
+        run: echo "OPENWRT_VERSION=$(tr -d ' \n' < .github/openwrt-version)" >> $GITHUB_ENV
+
       - name: Read PKG_VERSION from Makefile
         id: version
         run: |
           MAKEFILE="packages/print/cups/Makefile"
-          PKG_VERSION=$(grep -E '^PKG_VERSION:=' "$MAKEFILE" | cut -d= -f2)
+          # Makefile 含 snapshot/stable 两段 PKG_VERSION，只取 stable 数字版本行
+          PKG_VERSION=$(grep -E '^PKG_VERSION:=[0-9]' "$MAKEFILE" | head -1 | cut -d= -f2- | tr -d ' ')
+          [ -n "$PKG_VERSION" ] || { echo "Could not read PKG_VERSION from $MAKEFILE"; exit 1; }
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
           echo "pkg_version=${PKG_VERSION}" >> $GITHUB_OUTPUT
 

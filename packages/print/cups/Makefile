@@ -7,7 +7,7 @@ PKG_NAME:=cups
 -include $(CURDIR)/snapshot.mk
 
 ifneq ($(CUPS_SNAPSHOT_COMMIT),)
-PKG_VERSION:=$(if $(CUPS_SNAPSHOT_VERSION),$(CUPS_SNAPSHOT_VERSION),2.5.0~snapshot)
+PKG_VERSION:=$(if $(CUPS_SNAPSHOT_VERSION),$(CUPS_SNAPSHOT_VERSION),2.5.0)
 PKG_RELEASE:=1
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/OpenPrinting/cups.git
