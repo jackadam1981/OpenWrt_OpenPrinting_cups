@@ -1,5 +1,5 @@
 # OpenWrt CUPS Package Build
-# 从 downloads.openwrt.org 下载 SDK，产出 .ipk（opkg 格式，适配 24.10.x）
+# 从 downloads.openwrt.org 下载 SDK，产出 .ipk（版本见 .github/openwrt-version）
 name: Build CUPS for OpenWrt
 
 on:

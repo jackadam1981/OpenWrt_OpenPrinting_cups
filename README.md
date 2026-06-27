@@ -28,7 +28,7 @@
 
 ## CI 构建
 
-GitHub Actions 从 [downloads.openwrt.org](https://downloads.openwrt.org) 下载 OpenWrt 24.10 SDK 并编译，产出 `.ipk`。推送到 `main`/`master` 或提交 PR 时触发，产物作为 Artifact 提供下载。  
+GitHub Actions 从 [downloads.openwrt.org](https://downloads.openwrt.org) 下载 OpenWrt SDK（版本见 `.github/openwrt-version`）并编译，产出 `.ipk`。推送到 `main`/`master` 或提交 PR 时触发，产物作为 Artifact 提供下载。  
 简体中文 Web 界面使用源码 overlay 方式提供：`packages/print/cups/files/source/doc/zh_CN/` 与 `packages/print/cups/files/source/templates/zh_CN/` 会在构建阶段覆盖到 CUPS 源码树的 `doc/zh_CN/` 和 `templates/zh_CN/`。
 
 ### 支持设备示例
