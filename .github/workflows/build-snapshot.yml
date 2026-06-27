@@ -129,7 +129,7 @@ jobs:
           curl -sL -o sdk.tar.zst "${BASE_URL}/${TARGET_PATH}/${SDK_FILE}"
           tar -I zstd -xf sdk.tar.zst
           rm sdk.tar.zst
-          SDK_DIR=$(find "$SDK_WORK" -maxdepth 1 -type d -name "openwrt-sdk-*" | head -1)
+          SDK_DIR=$(find "$SDK_WORK" -mindepth 1 -maxdepth 1 -type d -name "openwrt-sdk-*" | head -1)
           [ -n "$SDK_DIR" ] || { echo "ERROR: SDK directory not found under ${SDK_WORK}"; exit 1; }
           echo "dir=${SDK_DIR}" >> $GITHUB_OUTPUT
 
